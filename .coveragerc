@@ -1,5 +1,4 @@
 [run]
 omit =
-    iarp_utils/connectors/*
     tests/*
     iarp_utils/datetimes.py
