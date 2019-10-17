@@ -43,3 +43,28 @@ def dropdown_timerange(inc_in_minutes=15):
 
         inc = inc + datetime.timedelta(minutes=inc_in_minutes)
     return date_range
+
+
+def get_client_ip(meta: dict, primary_key='HTTP_X_FORWARDED_FOR'):
+    """ Get the clients IP address from request meta data.
+
+    Examples:
+
+        Django example:
+        >>> get_client_ip(request.META)
+        123.123.123.123
+
+    Args:
+        meta: dict containing request meta data
+        primary_key: The primary key to look for values in,
+                        if its not found, fallback to REMOTE_ADDR.
+
+    Returns:
+        String containing the users ip address, None otherwise.
+    """
+
+    x_forwarded_for = meta.get(primary_key)
+
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0]
+    return meta.get('REMOTE_ADDR')
