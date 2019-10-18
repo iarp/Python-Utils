@@ -126,7 +126,7 @@ class BrowserBase:
     @property
     def download_directory(self):
         try:
-            return self.browser.download_directory
+            return self.active_driver.download_directory
         except AttributeError:
             pass
 
@@ -137,10 +137,10 @@ class BrowserBase:
     def _start_driver(self):
         # SessionNotCreatedException typically means mismatching browser and driver version
 
-        driver = self.selected_driver(**self.selected_driver_kwargs)
+        self.active_driver = self.selected_driver(**self.selected_driver_kwargs)
 
         try:
-            return driver.start()
+            return self.active_driver.start()
         except SessionNotCreatedException:
 
             # Only allow 1 browser version checker to be running at a time.
@@ -149,11 +149,11 @@ class BrowserBase:
                 if not good:
                     raise PIDFile.Break
 
-                driver.check_driver_version()
+                self.active_driver.check_driver_version()
 
             # Attempt to restart the browser
             try:
-                return driver.start()
+                return self.active_driver.start()
             except SessionNotCreatedException:
                 self.quit()
                 raise
@@ -317,7 +317,7 @@ class BrowserBase:
     def quit(self):
         """ Clears/Removes the temporary folder and then closes the browser session. """
         try:
-            self.browser.quit()
+            self.active_driver.quit()
         except AttributeError:
             pass
 
