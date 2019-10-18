@@ -97,6 +97,7 @@ class BrowserBase:
         self._execute_initialize = execute_initialize
         self.browser = None  # type: WebDriver
         self.selected_driver_kwargs = kwargs
+        self.active_driver = None  # type: DriverBase
 
         self.selected_driver = selected_driver
         if any([firefox]):
