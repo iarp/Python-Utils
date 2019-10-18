@@ -23,3 +23,7 @@ class WebToolsTests(unittest.TestCase):
             'REMOTE_ADDR': 'REMOTE_ADDR Address'
         }
         self.assertEqual('Forwarded For Address', webtools.get_client_ip(meta=meta))
+
+    def test_dropdown_timerange_values_length(self):
+        self.assertEqual(96, len(webtools.dropdown_timerange(inc_in_minutes=15)))
+        self.assertEqual(288, len(webtools.dropdown_timerange(inc_in_minutes=5)))

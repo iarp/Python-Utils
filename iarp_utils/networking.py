@@ -59,9 +59,8 @@ def get_wan_ip_from_linksys_router(router_ip_address='192.168.1.1',
     if not isinstance(ip, str):
         return
 
-    if startswith_many(ip, private_ip_ranges):
-        if not allow_returning_private_ip_ranges:
-            return
+    if startswith_many(ip, private_ip_ranges) and not allow_returning_private_ip_ranges:
+        return
 
     try:
         ipaddress.ip_address(ip)
@@ -100,6 +99,7 @@ def get_wan_ip_from_external_sites(sites: list = None, shuffler=random.shuffle, 
         if possible_returned_values and isinstance(possible_returned_values, (list, tuple, set)):
             sites = possible_returned_values
 
+    r = None
     for s in sites:
         try:
             r = requests.get(s)
@@ -111,13 +111,14 @@ def get_wan_ip_from_external_sites(sites: list = None, shuffler=random.shuffle, 
                     val = data[k]
                     ipaddress.ip_address(val)
                     return val
-                except (KeyError, TypeError):
-                    pass
+                except (ValueError, KeyError, TypeError):
+                    pass  # pragma: no cover
         except:
             continue
 
+    if r:
         try:
             ipaddress.ip_address(r.text)
             return r.text
-        except ValueError:
+        except (ValueError, AttributeError):
             pass
