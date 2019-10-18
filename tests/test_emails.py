@@ -45,3 +45,8 @@ class TestEmails(unittest.TestCase):
 
         ue = unique_emails(emails, self.emails2, None)
         self.assertEqual(6, len(ue))
+
+    def test_unique_emails_fails_dict(self):
+
+        ue = unique_emails(self.emails, {'fails': 'test@domain.com'})
+        self.assertEqual(3, len(ue))

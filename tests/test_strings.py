@@ -46,6 +46,9 @@ class StringsTests(unittest.TestCase):
     def test_slugify_default(self):
         self.assertEqual('input-with-spaces', slugify('input with spaces'))
 
+    def test_slugify_default_allow_unicode(self):
+        self.assertEqual('input-with-spaces', slugify('input with spaces', allow_unicode=True))
+
     def test_slugify_custom_replace_with(self):
         self.assertEqual('input/with/spaces', slugify('input with spaces', replace_with='/'))
 
