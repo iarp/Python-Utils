@@ -26,7 +26,7 @@ except ImportError:  # pragma: no cover
 
 try:
     from django.conf import settings
-except ImportError:  # # pragma: no cover
+except ImportError:  # pragma: no cover
     settings = None
 
 
@@ -283,7 +283,7 @@ class BrowserBase:
              element_xpath: Google xpath searching
 
         Raises:
-            AttributeError: If the timeout is reached and the element still doesn't exist.
+            TimeoutException: If the timeout is reached and the element still doesn't exist.
 
         """
         find_by, find_value = self.get_types(*args, **kwargs)
@@ -412,3 +412,5 @@ class BrowserBase:
 
         return file
 
+    def action_chains(self):
+        return ActionChains(self.browser)
