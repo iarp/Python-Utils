@@ -225,7 +225,7 @@ class BrowserBase:
             element_name: the name="" value of the element
             element_id: the id="" value of the element
             element_class: the class="" value of the element
-            element_xpath: Google xpath searching
+          a  element_xpath: Google xpath searching
 
         Raises:
             NoSuchElementException: If the element was not foun
@@ -233,6 +233,11 @@ class BrowserBase:
         elem = self.get_element(*args, **kwargs)
         elem.clear()
         elem.send_keys(Keys.HOME + str(value))
+        return elem
+
+    def double_click_element(self, *args, **kwargs):
+        elem = self.get_element(*args, **kwargs)
+        self.action_chains.double_click(elem).perform()
         return elem
 
     def select_dropdown(self, value=None, text=None, index=None, *args, **kwargs):
@@ -412,5 +417,6 @@ class BrowserBase:
 
         return file
 
+    @property
     def action_chains(self):
         return ActionChains(self.browser)
