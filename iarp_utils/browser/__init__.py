@@ -398,7 +398,7 @@ class BrowserBase:
 
         file = save_dir / f'{filename_prefix}{filename}.png'
 
-        self.browser.save_screenshot(file)
+        self.browser.save_screenshot(str(file))
 
         if notes:
             with open(f'{file}.txt', 'w') as fw:
