@@ -1,11 +1,14 @@
+import datetime
+import json
 import logging
 import os
 import shutil
 import tempfile
 
-from .utils import get_mime_types
+from ..datetimes import fromisoformat
 from ..exceptions import ImproperlyConfigured
 from ..files import download_file, extract_zip_single_file
+from .utils import get_mime_types
 
 try:
     from selenium import webdriver
@@ -29,7 +32,7 @@ try:
     DEFAULT_DRIVER_ROOT = getattr(settings, 'BROWSER_DRIVER_DIR', None)
     if not DEFAULT_DRIVER_ROOT:
         DEFAULT_DRIVER_ROOT = os.path.join(settings.BASE_DIR, 'bin')
-except ImportError:
+except:
     settings = None
     DEFAULT_DRIVER_ROOT = 'bin/'
 
@@ -65,7 +68,12 @@ class DriverBase:
         self.user_agent = kwargs.get('user_agent')
         self.latest_version = None
         self._browser = None
-        self._start_called = False
+
+        # Whether or not we should check driver version before running the browser.
+        self._check_driver_version = kwargs.get('check_driver_version', True)
+
+        # How often (in hours) to check if the driver version needs updating
+        self._check_driver_version_interval = kwargs.get('check_driver_version_interval', 24)
 
     @property
     def webdriver(self):
@@ -96,17 +104,65 @@ class DriverBase:
         return kwargs
 
     def start(self):
-        self._start_called = True
-
         # If start was already called, attempt to kill the existing session.
         self.quit()
 
         self._browser = self.webdriver(**self.get_options())
+
+        if self._check_driver_version_allowed():
+            self.check_driver_version()
+
         return self.browser
 
+    def _check_driver_version_allowed(self):
+
+        if not self._check_driver_version or WEBDRIVER_IN_PATH:
+            return False
+
+        dt_file = os.path.join(DEFAULT_DRIVER_ROOT, 'check_driver_version.json')
+        driver_name = type(self).__name__
+
+        try:
+            with open(dt_file, 'r') as fo:
+                data = json.load(fo)
+        except (FileNotFoundError, json.decoder.JSONDecodeError):
+            data = {driver_name: []}
+
+        # By default, allow the version check to happen
+        allowed = True
+
+        if isinstance(data, dict) and data.get(driver_name):
+
+            # Attempt to convert the first string in the list from isoformat
+            # into datetime object for time comparison. In the event it fails
+            # to convert, clear the data list and let it resave the file.
+            try:
+                last_checked = fromisoformat(data[driver_name][0])
+                hours_ago = datetime.datetime.now() - datetime.timedelta(hours=self._check_driver_version_interval)
+                allowed = hours_ago >= last_checked
+            except (TypeError, ValueError, KeyError):
+                data = {driver_name: []}
+
+            # If check is not allowed to happen, return now as to prevent
+            # another timestamp from being saved.
+            if not allowed:
+                return False
+
+            # For future sake, only keep the last 50 checks.
+            if len(data[driver_name]) > 50:
+                data[driver_name] = data[driver_name][:50]
+
+        data[driver_name].insert(0, datetime.datetime.now().isoformat())
+
+        with open(dt_file, 'w') as fo:
+            json.dump(data, fo, indent=4)
+
+        return allowed
+
     def check_driver_version(self):
-        if not self._start_called:
-            raise ValueError('You must make a call to start() before check_driver_version is allowed.')
+        raise NotImplementedError(f'{type(self).__name__} must implement check_driver_version method')
+
+    def get_capabilities(self):
         return getattr(self._browser, 'capabilities', None)
 
     @staticmethod
@@ -139,6 +195,7 @@ class DriverBase:
         raise FileNotFoundError('browser driver not found')
 
     def quit(self, **kwargs):
+        kwargs['ignore_errors'] = kwargs.get('ignore_errors', True)
         self.delete_download_directory(**kwargs)
         try:
             self._browser.quit()
@@ -188,28 +245,41 @@ class ChromeDriver(DriverBase):
             chrome_options=chrome_options
         )
 
+    def get_browser_version(self):
+        capabilities = self.get_capabilities()
+        try:
+            return capabilities['browserVersion'].split('.')[0]
+        except (AttributeError, IndexError, KeyError, TypeError):
+            return
+
+    def get_driver_version(self):
+        capabilities = self.get_capabilities()
+        try:
+            return capabilities['chrome']['chromedriverVersion'].split('.')[0]
+        except (AttributeError, IndexError, KeyError, TypeError):
+            return
+
     def check_driver_version(self):
         """ Check to ensure the local chromedriver being used is valid for the chrome installation. """
 
         if WEBDRIVER_IN_PATH:
             return
 
-        capabilities = super().check_driver_version()
         root_url = 'https://chromedriver.storage.googleapis.com/'
 
-        try:
-            browser_version = capabilities['browserVersion'].split('.')[0]
-            driver_version = capabilities['chrome']['chromedriverVersion'].split('.')[0]
+        browser_version = self.get_browser_version()
+        driver_version = self.get_driver_version()
 
-            if driver_version == browser_version:
-                return
+        # If we obtained the browsers version and the driver version matches,
+        # we don't need to check anything more.
+        if browser_version and browser_version == driver_version:
+            return
 
-            self.latest_version = requests.get(f'{root_url}LATEST_RELEASE_{browser_version}').text.strip()
-        except (AttributeError, IndexError, KeyError, TypeError):
+        url = f'{root_url}LATEST_RELEASE'
+        if browser_version:
+            url = f'{root_url}LATEST_RELEASE_{browser_version}'
 
-            # If accessing capabilities causes one of the above errors, just grab the latest and continue
-            if not self.latest_version:
-                self.latest_version = requests.get(f'{root_url}LATEST_RELEASE').text.strip()
+        self.latest_version = requests.get(url).text.strip()
 
         self.quit()
 
@@ -259,7 +329,7 @@ class FirefoxDriver(DriverBase):
         if WEBDRIVER_IN_PATH:
             return
 
-        capabilities = super().check_driver_version()
+        capabilities = self.get_capabilities()
 
         if not self.latest_version:
             self.latest_version = requests.get('https://api.github.com/repos/mozilla/geckodriver/releases').json()[0]
