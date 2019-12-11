@@ -195,7 +195,6 @@ class DriverBase:
         raise FileNotFoundError('browser driver not found')
 
     def quit(self, **kwargs):
-        kwargs['ignore_errors'] = kwargs.get('ignore_errors', True)
         self.delete_download_directory(**kwargs)
         try:
             self._browser.quit()
@@ -219,6 +218,7 @@ class DriverBase:
         if not self._download_directory:
             return
 
+        kwargs['ignore_errors'] = kwargs.get('ignore_errors', True)
         shutil.rmtree(self._download_directory, **kwargs)
 
 
