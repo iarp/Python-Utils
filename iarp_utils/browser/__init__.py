@@ -385,7 +385,7 @@ class BrowserBase:
                 try:
                     save_dir = os.path.join(getattr(settings, attr), 'browser_screenshots')
                     break
-                except AttributeError:
+                except:
                     continue
             else:
                 return

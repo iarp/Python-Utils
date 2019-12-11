@@ -47,7 +47,7 @@ class PIDFile(object):
                 try:
                     folder = getattr(settings, attr)
                     break
-                except AttributeError:
+                except:
                     continue
 
         self.folder = folder or ''
