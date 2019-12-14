@@ -2,9 +2,9 @@ from setuptools import setup
 
 setup(
     name='iarp_utils',
-    version='0.6.2',
+    version='0.6.3',
     description='A personal collection of common python utilities used in various projects',
-    url='https://bitbucket.org/iarp/python-framework',
+    url='https://bitbucket.org/iarp/iarp-python-utils/',
     author='IARP',
     author_email='iarp.opensource@gmail.com',
     license='MIT',
