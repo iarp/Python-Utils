@@ -1,6 +1,8 @@
 import datetime
 import os
 import unittest
+import json
+import mock
 
 from iarp_utils.configuration import load, save
 from tests import BASE_DIR
@@ -55,3 +57,23 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual('12345', tc['b64encode password'])
         self.assertIn('_type', tc)
         self.assertEqual('test', tc['_type'])
+
+    def test_save_with_keys_to_encode(self):
+
+        config = {
+            'Test': {
+                'InDepth': '12345'
+            }
+        }
+
+        save(config, self.garbage_json_file, keys_to_encode=['InDepth'])
+
+        with open(self.garbage_json_file, 'r') as fo:
+            data = json.load(fo)
+
+        self.assertIn('__config_params', data)
+        self.assertIn('keys_to_encode', data.get('__config_params', {}))
+
+        config2 = load(self.garbage_json_file)
+
+        self.assertEqual('12345', config2['Test']['InDepth'])

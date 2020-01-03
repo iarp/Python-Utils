@@ -76,7 +76,7 @@ class _CustomJSONDecoder(json.JSONDecoder):
         return obj
 
 
-def _recursive_encode_config_dict_passwords(d, first=True):
+def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None):
     """ Recursively traverse the dict supplied looking for passwords.
 
     Args:
@@ -87,14 +87,34 @@ def _recursive_encode_config_dict_passwords(d, first=True):
     """
     if first:
         d = copy.deepcopy(d)
+
+    if not keys_to_encode:
+        keys_to_encode = []
+
+    # Only attempt to load the keys data from config if its the first iteration
+    if not keys_to_encode and first:
+        keys_to_encode = d.get('__config_params', {}).get('keys_to_encode', [])
+
+    # Double check we're still working with a list
+    if not isinstance(keys_to_encode, list):
+        raise ValueError(f'keys_to_encode must by of type list or None, found {type(keys_to_encode)}')
+
+    # Re-add the keys to config on first iteration so it gets saved
+    if keys_to_encode and first:
+        d['__config_params'] = {'keys_to_encode': keys_to_encode}
+
     for k, v in d.items():
+
+        if k == '__config_params':
+            continue
+
         dv = d.get(k, {})
         if not isinstance(dv, collections.abc.Mapping):
-            if isinstance(k, str) and 'password' in k.lower():
+            if isinstance(k, str) and ('password' in k.lower() or k in keys_to_encode):
                 v = _PasswordManager(v)
             d[k] = v
         elif isinstance(v, collections.abc.Mapping):
-            d[k] = _recursive_encode_config_dict_passwords(dv, first=False)
+            d[k] = _recursive_encode_config_dict_passwords(dv, first=False, keys_to_encode=keys_to_encode)
         else:
             d[k] = v
     return d
@@ -155,7 +175,7 @@ def load(file_location='config.json', use_relative_path=False):
     return config
 
 
-def save(config: dict, file_location='config.json', use_relative_path=False, encode_passwords=True):
+def save(config: dict, file_location='config.json', use_relative_path=False, encode_passwords=True, keys_to_encode=None):
     """ Saves the configuration ini file.
 
     Args:
@@ -171,7 +191,7 @@ def save(config: dict, file_location='config.json', use_relative_path=False, enc
     with open(file_location, 'w') as fw:
 
         if encode_passwords:
-            encoded_config = _recursive_encode_config_dict_passwords(config)
+            encoded_config = _recursive_encode_config_dict_passwords(config, keys_to_encode=keys_to_encode)
         else:
             encoded_config = config
         json.dump(encoded_config, fw, cls=_CustomJSONEncoder, indent=4)
