@@ -8,7 +8,18 @@ import collections.abc
 from .datetimes import fromisoformat
 
 
+def _encode_value(value):
+    return 'b64{}'.format(base64.b64encode(value.encode('utf-8')).decode('utf-8'))
+
+
+def _decode_value(value):
+    if value.startswith('b64'):
+        return base64.b64decode(value[3:]).decode('utf-8')
+    return value
+
+
 class _PasswordManager:
+    _type = 'encoded'
 
     def __init__(self, value):
         self.value = str(value)
@@ -18,16 +29,6 @@ class _PasswordManager:
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {self.value}>'
-
-    @staticmethod
-    def encode(value):
-        return 'b64{}'.format(base64.b64encode(value.encode('utf-8')).decode('utf-8'))
-
-    @staticmethod
-    def decode(value):
-        if value.startswith('b64'):
-            return base64.b64decode(value[3:]).decode('utf-8')
-        return value
 
 
 class _CustomJSONEncoder(json.JSONEncoder):
@@ -46,8 +47,8 @@ class _CustomJSONEncoder(json.JSONEncoder):
 
         if isinstance(o, _PasswordManager):
             return {
-                '_type': 'password',
-                'value': _PasswordManager.encode(o.value)
+                '_type': o._type,
+                'value': _encode_value(o.value)
             }
 
         return super().default(o=o)
@@ -70,8 +71,8 @@ class _CustomJSONDecoder(json.JSONDecoder):
             return fromisoformat(obj['value'])
         if obj.get('_type') == 'date':
             return fromisoformat(obj['value']).date()
-        if obj.get('_type') == 'password':
-            return _PasswordManager.decode(obj['value'])
+        if obj.get('_type') in ['password', _PasswordManager._type]:
+            return _decode_value(obj['value'])
 
         return obj
 
@@ -120,6 +121,22 @@ def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None):
     return d
 
 
+def _encode_config(config, encode_passwords=True, keys_to_encode=None):
+    if encode_passwords:
+        encoded_config = _recursive_encode_config_dict_passwords(config, keys_to_encode=keys_to_encode)
+    else:
+        encoded_config = config
+    return encoded_config
+
+
+def _dump_json_data(config, cls=_CustomJSONEncoder, indent=4):
+    return json.dumps(config, cls=cls, indent=indent)
+
+
+def _load_json_data(data, cls=_CustomJSONDecoder):
+    return json.loads(data, cls=cls)
+
+
 def load(file_location='config.json', use_relative_path=False):
     """ Loads up a config.json file into a multi-level dict.
 
@@ -166,8 +183,10 @@ def load(file_location='config.json', use_relative_path=False):
         file_location = os.path.join(file_path, file_location)
 
     try:
-        with open(file_location, 'r') as fo:
-            config = json.load(fo, cls=_CustomJSONDecoder)
+        with open(file_location, 'r', encoding='utf8') as fo:
+            config = _load_json_data(fo.read())
+
+        # Resave file on read to ensure items that should be encoded, are encoded.
         save(config=config, file_location=file_location)
     except FileNotFoundError:
         config = dict()
@@ -183,15 +202,19 @@ def save(config: dict, file_location='config.json', use_relative_path=False, enc
         file_location: Where to save the json file?
         use_relative_path: Use a path relative to the runtime file.
         encode_passwords: bool whether or not to encode passwords in base64
+        keys_to_encode: list of keys found in config that should be encoded along with passwords.
     """
     if use_relative_path:
         file_path = os.path.dirname(os.path.abspath(sys.argv[0]))
         file_location = os.path.join(file_path, file_location)
 
-    with open(file_location, 'w') as fw:
+    encoded_config = _encode_config(
+        config=config,
+        encode_passwords=encode_passwords,
+        keys_to_encode=keys_to_encode
+    )
 
-        if encode_passwords:
-            encoded_config = _recursive_encode_config_dict_passwords(config, keys_to_encode=keys_to_encode)
-        else:
-            encoded_config = config
-        json.dump(encoded_config, fw, cls=_CustomJSONEncoder, indent=4)
+    dumped_data = _dump_json_data(encoded_config)
+
+    with open(file_location, 'w', encoding='utf8') as fw:
+        fw.write(dumped_data)
