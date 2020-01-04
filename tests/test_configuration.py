@@ -56,6 +56,7 @@ class ConfigurationTests(unittest.TestCase):
 
         d = datetime.datetime.now().date()
         dt = datetime.datetime.now()
+        set_test = {'blah1', 'blah2'}
 
         config = {
             'type_checks': {
@@ -66,7 +67,8 @@ class ConfigurationTests(unittest.TestCase):
                 'bool_false': False,
                 'escape percentages': '%',
                 'b64encode password': '12345',
-                '_type': 'test'
+                '_type': 'test',
+                'set test': set_test,
             }
         }
 
@@ -87,6 +89,7 @@ class ConfigurationTests(unittest.TestCase):
         self.assertEqual('%', type_checks['escape percentages'])
         self.assertEqual('12345', type_checks['b64encode password'])
         self.assertEqual('test', type_checks['_type'])
+        self.assertEqual(set_test, type_checks['set test'])
 
     def test_encode_config_with_keys_to_encode(self):
 

@@ -56,6 +56,12 @@ class _CustomJSONEncoder(json.JSONEncoder):
                 'value': _encode_value(o.value)
             }
 
+        if isinstance(o, set):
+            return {
+                '_type': 'set',
+                'value': list(o)
+            }
+
         return super().default(o=o)  # pragma: no cover
 
 
@@ -72,16 +78,20 @@ class _CustomJSONDecoder(json.JSONDecoder):
         if '_type' not in obj:
             return obj
 
-        if obj.get('_type') == 'datetime':
+        obj_type = obj.get('_type')
+
+        if obj_type == 'datetime':
             return fromisoformat(obj['value'])
-        if obj.get('_type') == 'date':
+        if obj_type == 'date':
             return fromisoformat(obj['value']).date()
-        if obj.get('_type') in ['password', _EncodeManager._type]:
+        if obj_type in ['password', _EncodeManager._type]:
             try:
                 return _decode_value(obj['value'])
             except (UnicodeDecodeError, binascii.Error):
                 warnings.warn('Encoded value failed to decode properly.', UnicodeWarning)
                 return ''
+        if obj_type == 'set':
+            return set(obj['value'])
 
         return obj
 
