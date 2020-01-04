@@ -1,3 +1,4 @@
+import binascii
 import os
 import json
 import sys
@@ -5,11 +6,15 @@ import datetime
 import base64
 import copy
 import collections.abc
+import warnings
 from .datetimes import fromisoformat
 
 
 def _encode_value(value):
-    return 'b64{}'.format(base64.b64encode(value.encode('utf-8')).decode('utf-8'))
+    encoded_value = base64.b64encode(value.encode('utf-8')).decode('utf-8')
+    if encoded_value:
+        return f'b64{encoded_value}'
+    return ''
 
 
 def _decode_value(value):
@@ -18,16 +23,16 @@ def _decode_value(value):
     return value
 
 
-class _PasswordManager:
+class _EncodeManager:
     _type = 'encoded'
 
     def __init__(self, value):
         self.value = str(value)
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return f'<{self.__class__.__name__}: {self.value}>'
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return f'<{self.__class__.__name__}: {self.value}>'
 
 
@@ -45,13 +50,13 @@ class _CustomJSONEncoder(json.JSONEncoder):
                 'value': o.isoformat()
             }
 
-        if isinstance(o, _PasswordManager):
+        if isinstance(o, _EncodeManager):
             return {
                 '_type': o._type,
                 'value': _encode_value(o.value)
             }
 
-        return super().default(o=o)
+        return super().default(o=o)  # pragma: no cover
 
 
 class _CustomJSONDecoder(json.JSONDecoder):
@@ -71,8 +76,12 @@ class _CustomJSONDecoder(json.JSONDecoder):
             return fromisoformat(obj['value'])
         if obj.get('_type') == 'date':
             return fromisoformat(obj['value']).date()
-        if obj.get('_type') in ['password', _PasswordManager._type]:
-            return _decode_value(obj['value'])
+        if obj.get('_type') in ['password', _EncodeManager._type]:
+            try:
+                return _decode_value(obj['value'])
+            except (UnicodeDecodeError, binascii.Error):
+                warnings.warn('Encoded value failed to decode properly.', UnicodeWarning)
+                return ''
 
         return obj
 
@@ -84,7 +93,7 @@ def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None):
         d: The dict to search.
 
     Returns:
-        A modified dict with passwords wrapped in _PasswordManager
+        A modified dict with passwords wrapped in _EncodeManager
     """
     if first:
         d = copy.deepcopy(d)
@@ -98,7 +107,7 @@ def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None):
 
     # Double check we're still working with a list
     if not isinstance(keys_to_encode, list):
-        raise ValueError(f'keys_to_encode must by of type list or None, found {type(keys_to_encode)}')
+        raise ValueError(f'keys_to_encode must by of type list or None, found {type(keys_to_encode).__name__}')
 
     # Re-add the keys to config on first iteration so it gets saved
     if keys_to_encode and first:
@@ -110,13 +119,11 @@ def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None):
             continue
 
         dv = d.get(k, {})
-        if not isinstance(dv, collections.abc.Mapping):
-            if isinstance(k, str) and ('password' in k.lower() or k in keys_to_encode):
-                v = _PasswordManager(v)
-            d[k] = v
-        elif isinstance(v, collections.abc.Mapping):
+        if isinstance(dv, collections.abc.Mapping):
             d[k] = _recursive_encode_config_dict_passwords(dv, first=False, keys_to_encode=keys_to_encode)
         else:
+            if isinstance(k, str) and ('password' in k.lower() or k in keys_to_encode):
+                v = _EncodeManager(v)
             d[k] = v
     return d
 
