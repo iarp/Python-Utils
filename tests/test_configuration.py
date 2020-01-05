@@ -1,14 +1,36 @@
 import datetime
-import warnings
+import os
 import unittest
+from unittest import mock
+import warnings
 
 from iarp_utils.configuration import (
+    save, load,
     _encode_config, _load_json_data, _dump_json_data,
     _CustomJSONDecoder, _EncodeManager
 )
+from tests import BASE_DIR
 
 
 class ConfigurationTests(unittest.TestCase):
+
+    def test_save_and_load(self):
+        config = {'test': 'here'}
+
+        expected_written_data = '{\n    "test": "here"\n}'
+
+        with mock.patch('builtins.open', mock.mock_open()) as m:
+            save(config, 'test.json', use_relative_path=True)
+        handle = m()
+        handle.write.assert_called_once_with(expected_written_data)
+
+        with mock.patch('builtins.open', mock.mock_open(read_data=expected_written_data)) as m:
+            config2 = load('test.json')
+            self.assertEqual(config, config2)
+
+    def test_load_using_relative_paths_on_non_existing_file(self):
+        config = load('garbage_non_existing.json', use_relative_path=True)
+        self.assertEqual({}, config)
 
     def test_encode_value(self):
         self.assertEqual('b64MTIzNDU=', _EncodeManager.encode_value("12345"))

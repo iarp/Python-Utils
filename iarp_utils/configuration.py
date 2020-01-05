@@ -160,7 +160,7 @@ def _load_json_data(data, cls=_CustomJSONDecoder):
     return json.loads(data, cls=cls)
 
 
-def load(file_location='config.json', use_relative_path=False):
+def load(file_location='config.json', use_relative_path=False, resave_on_load=True):
     """ Loads up a config.json file into a multi-level dict.
 
     Any options that contain the name "password" are encoded. It's nothing more than
@@ -200,6 +200,9 @@ def load(file_location='config.json', use_relative_path=False):
             a file_location='config.json' the file would attempt to load
             from the zip file of the compiled exe. If you supply use_relative_path=True,
             it will change the root path to be based on where the exe is executing from.
+        resave_on_load: bool whether or not to resave after loading.
+            Default is enabled, this allows encoded items that may've been
+            manually updated to be re-encoded on next runtime.
     Returns:
         dict containing values from the json file.
     """
@@ -212,8 +215,9 @@ def load(file_location='config.json', use_relative_path=False):
         with open(file_location, 'r', encoding='utf8') as fo:
             config = _load_json_data(fo.read())
 
-        # Resave file on read to ensure items that should be encoded, are encoded.
-        save(config=config, file_location=file_location)
+        if resave_on_load:
+            # Resave file on read to ensure items that should be encoded, are encoded.
+            save(config=config, file_location=file_location)
     except FileNotFoundError:
         config = dict()
 
