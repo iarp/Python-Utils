@@ -10,19 +10,6 @@ import warnings
 from .datetimes import fromisoformat
 
 
-def _encode_value(value):
-    encoded_value = base64.b64encode(value.encode('utf-8')).decode('utf-8')
-    if encoded_value:
-        return f'b64{encoded_value}'
-    return ''
-
-
-def _decode_value(value):
-    if value.startswith('b64'):
-        return base64.b64decode(value[3:]).decode('utf-8')
-    return value
-
-
 class _EncodeManager:
     _type = 'encoded'
 
@@ -34,6 +21,19 @@ class _EncodeManager:
 
     def __repr__(self):  # pragma: no cover
         return f'<{self.__class__.__name__}: {self.value}>'
+
+    @staticmethod
+    def encode_value(value, encoding='utf8'):
+        encoded_value = base64.b64encode(value.encode(encoding)).decode(encoding)
+        if encoded_value:
+            return f'b64{encoded_value}'
+        return ''
+
+    @staticmethod
+    def decode_value(value, encoding='utf'):
+        if value.startswith('b64'):
+            return base64.b64decode(value[3:]).decode(encoding)
+        return value
 
 
 class _CustomJSONEncoder(json.JSONEncoder):
@@ -53,7 +53,7 @@ class _CustomJSONEncoder(json.JSONEncoder):
         if isinstance(o, _EncodeManager):
             return {
                 '_type': o._type,
-                'value': _encode_value(o.value)
+                'value': _EncodeManager.encode_value(o.value)
             }
 
         if isinstance(o, set):
@@ -82,14 +82,17 @@ class _CustomJSONDecoder(json.JSONDecoder):
 
         if obj_type == 'datetime':
             return fromisoformat(obj['value'])
+
         if obj_type == 'date':
             return fromisoformat(obj['value']).date()
+
         if obj_type in ['password', _EncodeManager._type]:
             try:
-                return _decode_value(obj['value'])
+                return _EncodeManager.decode_value(obj['value'])
             except (UnicodeDecodeError, binascii.Error):
                 warnings.warn('Encoded value failed to decode properly.', UnicodeWarning)
                 return ''
+
         if obj_type == 'set':
             return set(obj['value'])
 
@@ -97,7 +100,7 @@ class _CustomJSONDecoder(json.JSONDecoder):
 
 
 def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None):
-    """ Recursively traverse the dict supplied looking for passwords.
+    """ Recursively traverse the dict supplied looking for values to encode.
 
     Args:
         d: The dict to search.
@@ -106,14 +109,18 @@ def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None):
         A modified dict with passwords wrapped in _EncodeManager
     """
     if first:
+        # On first iteration of reading the dict, make a full
+        # copy of it so we can alter data without affecting
+        # the originally supplied dict which may still be used.
         d = copy.deepcopy(d)
 
     if not keys_to_encode:
         keys_to_encode = []
 
-    # Only attempt to load the keys data from config if its the first iteration
-    if not keys_to_encode and first:
-        keys_to_encode = d.get('__config_params', {}).get('keys_to_encode', [])
+        if first:
+            # Only attempt to load the keys data from config if its the
+            # first iteration and keys_to_encode was not supplied this time.
+            keys_to_encode = d.get('__config_params', {}).get('keys_to_encode', keys_to_encode)
 
     # Double check we're still working with a list
     if not isinstance(keys_to_encode, list):
@@ -128,9 +135,8 @@ def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None):
         if k == '__config_params':
             continue
 
-        dv = d.get(k, {})
-        if isinstance(dv, collections.abc.Mapping):
-            d[k] = _recursive_encode_config_dict_passwords(dv, first=False, keys_to_encode=keys_to_encode)
+        if isinstance(v, collections.abc.Mapping):
+            d[k] = _recursive_encode_config_dict_passwords(v, first=False, keys_to_encode=keys_to_encode)
         else:
             if isinstance(k, str) and ('password' in k.lower() or k in keys_to_encode):
                 v = _EncodeManager(v)
@@ -138,9 +144,9 @@ def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None):
     return d
 
 
-def _encode_config(config, encode_passwords=True, keys_to_encode=None):
+def _encode_config(config, encode_passwords=True, **kwargs):
     if encode_passwords:
-        encoded_config = _recursive_encode_config_dict_passwords(config, keys_to_encode=keys_to_encode)
+        encoded_config = _recursive_encode_config_dict_passwords(config, **kwargs)
     else:
         encoded_config = config
     return encoded_config
@@ -188,9 +194,12 @@ def load(file_location='config.json', use_relative_path=False):
         }
 
     Args:
-        file_location: Where is the config.ini located? Best to pass full system path if possible.
-        use_relative_path:
-
+        file_location: Where to save the json file?
+        use_relative_path: Use a path relative to the runtime file.
+            Depending on the situation (py2exe, cx_freeze...etc) if you supplied
+            a file_location='config.json' the file would attempt to load
+            from the zip file of the compiled exe. If you supply use_relative_path=True,
+            it will change the root path to be based on where the exe is executing from.
     Returns:
         dict containing values from the json file.
     """
@@ -214,12 +223,37 @@ def load(file_location='config.json', use_relative_path=False):
 def save(config: dict, file_location='config.json', use_relative_path=False, encode_passwords=True, keys_to_encode=None):
     """ Saves the configuration ini file.
 
+    Examples:
+
+        >>> config = {'SQL': {'hostname': '192.168.1.2', ...}}
+        >>> save(config, 'config.json')
+
+        If using something like py2exe, cx_Freeze or the like, supply use_relative_path=True
+        >>> save(config, 'config.jsoni', use_relative_path=True)
+
     Args:
         config: dict of information to save
         file_location: Where to save the json file?
         use_relative_path: Use a path relative to the runtime file.
+            Depending on the situation (py2exe, cx_freeze...etc) if you supplied
+            a file_location='config.json' the file would attempt to load
+            from the zip file of the compiled exe. If you supply use_relative_path=True,
+            it will change the root path to be based on where the exe is executing from.
         encode_passwords: bool whether or not to encode passwords in base64
         keys_to_encode: list of keys found in config that should be encoded along with passwords.
+            By default any key that contains the word "password" is encoded using the base64 library.
+            This is nothing more than to stop a quick opportunist from opening the file and
+            seeing it immediately.
+
+            If you supply a list of keys that should also be encoded,
+            that list is stored in the json data under the key __config_params
+            as such it would be best to not use __config_params as a first
+            level key in your dict.
+
+            However if you supply keys_to_encode and in the future you decide to
+            add another item to keys_to_encode, you must supply all of the original
+             keys_to_encode items along with the new ones. Otherwise all of the
+             original encoded keys will be decoded on the next save.
     """
     if use_relative_path:
         file_path = os.path.dirname(os.path.abspath(sys.argv[0]))

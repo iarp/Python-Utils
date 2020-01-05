@@ -3,21 +3,20 @@ import warnings
 import unittest
 
 from iarp_utils.configuration import (
-    _encode_config, _load_json_data, _encode_value,
-    _decode_value, _dump_json_data, _CustomJSONDecoder,
-    _EncodeManager
+    _encode_config, _load_json_data, _dump_json_data,
+    _CustomJSONDecoder, _EncodeManager
 )
 
 
 class ConfigurationTests(unittest.TestCase):
 
     def test_encode_value(self):
-        self.assertEqual('b64MTIzNDU=', _encode_value("12345"))
-        self.assertEqual('', _encode_value(''))
+        self.assertEqual('b64MTIzNDU=', _EncodeManager.encode_value("12345"))
+        self.assertEqual('', _EncodeManager.encode_value(''))
 
     def test_decode_value(self):
-        self.assertEqual("12345", _decode_value("b64MTIzNDU="))
-        self.assertEqual('here', _decode_value('here'))
+        self.assertEqual("12345", _EncodeManager.decode_value("b64MTIzNDU="))
+        self.assertEqual('here', _EncodeManager.decode_value('here'))
 
     def test_encode_config_with_encode_passwords_false(self):
         config = {'sub': {'password': '12345'}}
@@ -75,7 +74,7 @@ class ConfigurationTests(unittest.TestCase):
         encoded_config = _encode_config(config)
         dumped_config = _dump_json_data(encoded_config)
 
-        self.assertIn(_encode_value("12345"), dumped_config)
+        self.assertIn(_EncodeManager.encode_value("12345"), dumped_config)
 
         config2 = _load_json_data(dumped_config)
         self.assertIn('type_checks', config2)
@@ -103,7 +102,7 @@ class ConfigurationTests(unittest.TestCase):
         dumped_config = _dump_json_data(encoded_config)
 
         self.assertIn('__config_params', dumped_config)
-        self.assertIn(_encode_value("12345"), dumped_config)
+        self.assertIn(_EncodeManager.encode_value("12345"), dumped_config)
 
         dejsoned_config = _load_json_data(dumped_config)
 
