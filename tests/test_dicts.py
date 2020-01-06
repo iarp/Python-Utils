@@ -18,7 +18,7 @@ class DictsTests(unittest.TestCase):
 
     def test_custom_ordered_dict(self):
         od = DefaultOrderedDict(dict)
-        self.assertEqual("OrderedDefaultDict(<class 'dict'>, DefaultOrderedDict())", repr(od))
+        self.assertEqual("DefaultOrderedDict(<class 'dict'>, DefaultOrderedDict())", repr(od))
         od['single'] = 'here1'
         od['multiple']['levels'] = 'here2'
         self.assertIsNone(od.get('test'))
