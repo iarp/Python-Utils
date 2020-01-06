@@ -51,6 +51,10 @@ class _CustomJSONEncoder(json.JSONEncoder):
             }
 
         if isinstance(o, _EncodeManager):
+
+            if not o.value:
+                return ""
+
             return {
                 '_type': o._type,
                 'value': _EncodeManager.encode_value(o.value)

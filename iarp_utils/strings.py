@@ -19,9 +19,9 @@ def replace_all(text: str, replace_withs: dict):
         >>> data = {
         >>>     'Good Value': ['Bad Value 1', 'Bad Value 2']
         >>> }
-        >>> replace_all('Location: Bad Value 1')
+        >>> replace_all('Location: Bad Value 1', data)
         Location: Good Value
-        >>> replace_all('Location: Bad Value 2')
+        >>> replace_all('Location: Bad Value 2', data)
         Location: Good Value
 
     Args:

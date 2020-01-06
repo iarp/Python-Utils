@@ -62,4 +62,4 @@ class DefaultOrderedDict(OrderedDict):
         raise NotImplementedError('deepcopy not permitted on DefaultOrderedDict.')
 
     def __repr__(self):
-        return 'OrderedDefaultDict(%s, %s)' % (self.default_factory, OrderedDict.__repr__(self))
+        return 'DefaultOrderedDict(%s, %s)' % (self.default_factory, OrderedDict.__repr__(self))
