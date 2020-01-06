@@ -11,6 +11,8 @@ import random
 
 from .strings import random_character_generator
 
+__GARBAGE_SPLITTER__ = '|----|'
+
 
 def read_funny_data_file(filename: str):
     """ The file that contains encoded data to be read.
@@ -25,13 +27,18 @@ def read_funny_data_file(filename: str):
         certs_data = ''.join(line.strip() for line in fo)
     decoded_data = _decode_funny_data(certs_data)
 
-    if isinstance(decoded_data, dict) and 'garbage' in decoded_data:
-        del(decoded_data['garbage'])
+    if __GARBAGE_SPLITTER__ in decoded_data:
+        decoded_data, garbage = decoded_data.rsplit(__GARBAGE_SPLITTER__, 1)
+
+    if decoded_data.startswith('pydict|'):
+        decoded_data = json.loads(decoded_data[7:])
+    elif decoded_data.startswith('pystr|'):
+        decoded_data = decoded_data[6:]
 
     return decoded_data
 
 
-def write_funny_data_file(filename: str, raw_data: dict, width=80):
+def write_funny_data_file(filename: str, raw_data, width=80, garbage_length=4000):
     """ Writes a dict to a file encoded and obfuscated. Obvisouly not
      secure but secure enough from people who don't know computers
      and programming well enough.
@@ -40,23 +47,28 @@ def write_funny_data_file(filename: str, raw_data: dict, width=80):
         filename: The file to write to
         raw_data: The data to write.
         width: The license file has text wrapping applied, how many columns?
+        garbage_length: How much garbage to write to the file?
     """
+    garbage = random_character_generator(garbage_length or 2000)
+
+    data_type = type(raw_data).__name__
+    if isinstance(raw_data, dict):
+        raw_data = json.dumps(raw_data)
 
     # To make the license file larger, I've added a ton of garbage.
-    if 'garbage' not in raw_data:
-        raw_data['garbage'] = random_character_generator(2000)
+    raw_data = f'py{data_type}|{raw_data}{__GARBAGE_SPLITTER__}{garbage}'
 
-    encoded_string = _encode_funny_data(raw_data, random.randint(5, 90))
+    encoded_string = _encode_funny_data(raw_data, random.randint(5, 999))
     with open(filename, 'w') as fw:
         lines = textwrap.wrap(encoded_string, width)
         fw.write('\n'.join(lines))
 
 
-def _encode_funny_data(data, n=20):
-    if n > 99:
+def _encode_funny_data(data, n=20, encoding='utf8'):
+    if n > 999:
         raise ValueError('n is greater than or equal to 100, 99 or lesser is permitted at this time.')
 
-    encoded_data = base64.b64encode(json.dumps(data).encode('utf8')).decode('utf8')
+    encoded_data = base64.b64encode(data.encode(encoding)).decode(encoding)
     split_encoded = [encoded_data[i:i + n] for i in range(0, len(encoded_data), n)]
 
     new_encoded_string = []
@@ -65,12 +77,12 @@ def _encode_funny_data(data, n=20):
         if len(item) == n:
             new_encoded_string.append(random_character_generator(n))
 
-    return '{}{}'.format(''.join(new_encoded_string), str(n).rjust(2, '0'))
+    return '{}{}'.format(''.join(new_encoded_string), str(n).rjust(3, '0'))
 
 
-def _decode_funny_data(encoded_data, json_item=True):
-    n = int(encoded_data[-2:])
-    data = encoded_data[:-2]
+def _decode_funny_data(encoded_data, encoding='utf8'):
+    n = int(encoded_data[-3:])
+    data = encoded_data[:-3]
 
     split_encoded = [data[i:i + n] for i in range(0, len(data), n)]
 
@@ -80,7 +92,4 @@ def _decode_funny_data(encoded_data, json_item=True):
         if len(item) < n or row % 2 == 0:
             new_decoded_string.append(item)
         row += 1
-    data = base64.b64decode(''.join(new_decoded_string)).decode('utf8')
-    if json_item:
-        return json.loads(data)
-    return data
+    return base64.b64decode(''.join(new_decoded_string)).decode(encoding)

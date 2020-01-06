@@ -15,7 +15,7 @@ class EncodersTests(unittest.TestCase):
         except:
             pass
 
-    def test_write_read_funny_data_is_correct(self):
+    def test_write_read_funny_data_dict_is_correct(self):
         data = {'blah1': 'here'}
         write_funny_data_file(self.test_lic_file, data)
 
@@ -23,6 +23,14 @@ class EncodersTests(unittest.TestCase):
         self.assertIn('blah1', new_data)
         self.assertEqual('here', new_data['blah1'])
         self.assertEqual(1, len(new_data))
+
+    def test_write_read_funny_data_str_is_correct(self):
+        data = 'here'
+        write_funny_data_file(self.test_lic_file, data)
+
+        new_data = read_funny_data_file(self.test_lic_file)
+        self.assertEqual('here', new_data)
+        self.assertEqual(4, len(new_data))
 
     def test_read_funny_data_line_length_matches(self):
         data = {'blah1': 'here'}
