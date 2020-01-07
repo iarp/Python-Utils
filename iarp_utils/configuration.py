@@ -13,27 +13,42 @@ from .datetimes import fromisoformat
 class _EncodeManager:
     _type = 'encoded'
 
-    def __init__(self, value):
-        self.value = str(value)
+    def __init__(self, value, encoding='utf8'):
+        self._encoding = encoding
+        self._value = value
+
+        if isinstance(value, str) and value.startswith('b64'):
+            decoded_value = base64.b64decode(value[3:]).decode(encoding)
+            if decoded_value.startswith('dict:'):
+                decoded_value = _load_json_data(decoded_value[5:])
+            self._value = decoded_value
 
     def __str__(self):  # pragma: no cover
-        return f'<{self.__class__.__name__}: {self.value}>'
+        return f'<{self.__class__.__name__}: {self._value}>'
 
     def __repr__(self):  # pragma: no cover
-        return f'<{self.__class__.__name__}: {self.value}>'
+        return f'<{self.__class__.__name__}: {self._value}>'
 
-    @staticmethod
-    def encode_value(value, encoding='utf8'):
-        encoded_value = base64.b64encode(value.encode(encoding)).decode(encoding)
-        if encoded_value:
-            return f'b64{encoded_value}'
-        return ''
+    @property
+    def encoded_value(self):
+        value = self._value
+        if not value:
+            return ""
+        if isinstance(value, dict):
+            value = f'dict:{_dump_json_data(value)}'
+        encoded_value = base64.b64encode(value.encode(self._encoding)).decode(self._encoding)
+        return f'b64{encoded_value}'
 
-    @staticmethod
-    def decode_value(value, encoding='utf'):
-        if value.startswith('b64'):
-            return base64.b64decode(value[3:]).decode(encoding)
-        return value
+    @property
+    def value(self):
+        return self._value
+
+    def __eq__(self, other):
+        if isinstance(other, _EncodeManager):
+            return self._value == other._value
+        elif isinstance(other, str):
+            return self._value == other
+        return NotImplemented
 
 
 class _CustomJSONEncoder(json.JSONEncoder):
@@ -57,7 +72,7 @@ class _CustomJSONEncoder(json.JSONEncoder):
 
             return {
                 '_type': o._type,
-                'value': _EncodeManager.encode_value(o.value)
+                'value': o.encoded_value
             }
 
         if isinstance(o, set):
@@ -92,7 +107,7 @@ class _CustomJSONDecoder(json.JSONDecoder):
 
         if obj_type in ['password', _EncodeManager._type]:
             try:
-                return _EncodeManager.decode_value(obj['value'])
+                return _EncodeManager(obj['value']).value
             except (UnicodeDecodeError, binascii.Error):
                 warnings.warn('Encoded value failed to decode properly.', UnicodeWarning)
                 return ''
@@ -103,11 +118,15 @@ class _CustomJSONDecoder(json.JSONDecoder):
         return obj
 
 
-def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None):
+def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None, keep_encoding=True):
     """ Recursively traverse the dict supplied looking for values to encode.
 
     Args:
         d: The dict to search.
+        first: Whether or not this is the first iteration
+        keys_to_encode: Keys to encode values on
+        keep_encoding: Whether or not to encode values if
+            the parent container is encoded or not.
 
     Returns:
         A modified dict with passwords wrapped in _EncodeManager
@@ -139,12 +158,22 @@ def _recursive_encode_config_dict_passwords(d, first=True, keys_to_encode=None):
         if k == '__config_params':
             continue
 
-        if isinstance(v, collections.abc.Mapping):
-            d[k] = _recursive_encode_config_dict_passwords(v, first=False, keys_to_encode=keys_to_encode)
-        else:
-            if isinstance(k, str) and ('password' in k.lower() or k in keys_to_encode):
-                v = _EncodeManager(v)
-            d[k] = v
+        # Evaluate whether or not the value will be encoded,
+        # need to pass this outcome into the recursive call
+        # to stop encoding already encoded data.
+        value_will_be_encoded = ('password' in k.lower() or k in keys_to_encode)
+
+        if isinstance(v, dict):
+            v = _recursive_encode_config_dict_passwords(
+                d=v,
+                first=False,
+                keys_to_encode=keys_to_encode,
+                keep_encoding=not value_will_be_encoded
+            )
+
+        if isinstance(k, str) and keep_encoding and value_will_be_encoded:
+            v = _EncodeManager(v)
+        d[k] = v
     return d
 
 
