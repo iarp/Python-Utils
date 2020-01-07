@@ -1,7 +1,6 @@
 import glob
-from pathlib import Path
 import os
-import urllib.request
+import requests
 import shutil
 import time
 import zipfile
@@ -20,8 +19,8 @@ def download_file(url: str, path_to_file):
         url: URL to the file
         path_to_file: filename to save to locally
     """
-    with urllib.request.urlopen(url) as response, open(path_to_file, "wb") as out_file:
-        shutil.copyfileobj(response, out_file)
+    with requests.get(url, stream=True) as response, open(path_to_file, 'wb') as out_file:
+        shutil.copyfileobj(response.raw, out_file)
 
 
 def extract_zip_single_file(zip_file: str, file_to_extract: str, folder_to_extract_to: str, delete_zip_on_finish=True,
@@ -106,9 +105,9 @@ def unique_file_exists(folder, filename, extension, filename_format="{filename}_
             return counter
         return generator(length=length)
 
-    path = Path(os.path.join(folder, f"{filename}.{extension}"))
-    if not path.exists():
-        return str(path)
+    path = os.path.join(folder, f"{filename}.{extension}")
+    if not os.path.isfile(path):
+        return path
 
     counter = 0
     while True:
@@ -120,10 +119,9 @@ def unique_file_exists(folder, filename, extension, filename_format="{filename}_
             extension=extension,
         )
 
-        path = Path(os.path.join(folder, new_filename))
-
-        if not path.exists():
-            return str(path)
+        path = os.path.join(folder, new_filename)
+        if not os.path.isfile(path):
+            return path
 
 
 def wait_for_downloaded_file(glob_path, read_mode="rb", checks=10, max_wait_in_seconds=10):
