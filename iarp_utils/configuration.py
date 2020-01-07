@@ -5,19 +5,19 @@ import sys
 import datetime
 import base64
 import copy
-import collections.abc
 import warnings
 from .datetimes import fromisoformat
 
 
 class _EncodeManager:
     _type = 'encoded'
+    _prefix = 'b64'
 
     def __init__(self, value, encoding='utf8'):
         self._encoding = encoding
         self._value = value
 
-        if isinstance(value, str) and value.startswith('b64'):
+        if isinstance(value, str) and value.startswith(self._prefix):
             decoded_value = base64.b64decode(value[3:]).decode(encoding)
             if decoded_value.startswith('dict:'):
                 decoded_value = _load_json_data(decoded_value[5:])
@@ -37,7 +37,7 @@ class _EncodeManager:
         if isinstance(value, dict):
             value = f'dict:{_dump_json_data(value)}'
         encoded_value = base64.b64encode(value.encode(self._encoding)).decode(self._encoding)
-        return f'b64{encoded_value}'
+        return f'{self._prefix}{encoded_value}'
 
     @property
     def value(self):
@@ -46,9 +46,7 @@ class _EncodeManager:
     def __eq__(self, other):
         if isinstance(other, _EncodeManager):
             return self._value == other._value
-        elif isinstance(other, str):
-            return self._value == other
-        return NotImplemented
+        return self._value == other
 
 
 class _CustomJSONEncoder(json.JSONEncoder):
@@ -81,7 +79,7 @@ class _CustomJSONEncoder(json.JSONEncoder):
                 'value': list(o)
             }
 
-        return super().default(o=o)  # pragma: no cover
+        return super().default(o=o)
 
 
 class _CustomJSONDecoder(json.JSONDecoder):

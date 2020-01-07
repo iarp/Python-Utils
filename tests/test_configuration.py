@@ -7,7 +7,7 @@ import warnings
 from iarp_utils.configuration import (
     save, load,
     _encode_config, _load_json_data, _dump_json_data,
-    _CustomJSONDecoder, _EncodeManager
+    _CustomJSONDecoder, _CustomJSONEncoder, _EncodeManager
 )
 from tests import BASE_DIR
 
@@ -90,6 +90,7 @@ class ConfigurationTests(unittest.TestCase):
                 'bool_false': False,
                 'escape percentages': '%',
                 'b64encode password': '12345',
+                'password is blank': '',
                 '_type': 'test',
                 'set test': set_test,
             }
@@ -111,6 +112,7 @@ class ConfigurationTests(unittest.TestCase):
         self.assertFalse(type_checks['bool_false'])
         self.assertEqual('%', type_checks['escape percentages'])
         self.assertEqual('12345', type_checks['b64encode password'])
+        self.assertEqual('', type_checks['password is blank'])
         self.assertEqual('test', type_checks['_type'])
         self.assertEqual(set_test, type_checks['set test'])
 
@@ -150,3 +152,27 @@ class ConfigurationTests(unittest.TestCase):
         config = {'test': ''}
         with self.assertRaises(ValueError):
             _encode_config(config, keys_to_encode='bad value')
+
+    def test_encodemanager_with_dict_as_value(self):
+        config = {'test': {'password': 'inside'}}
+        encoded_config = _encode_config(config)
+        encoded_config = _EncodeManager(encoded_config).encoded_value
+        output = _EncodeManager(encoded_config)
+        self.assertEqual(config, output)
+
+    def test_encodemanager_equality(self):
+        em1 = _EncodeManager('test')
+        em2 = _EncodeManager('test')
+        em3 = _EncodeManager('test3')
+
+        self.assertEqual(em1, em2)
+        self.assertNotEqual(em1, em3)
+
+    def test_customjsonencoder_fails_on_unknown_types(self):
+
+        class ThisShouldFail:
+            pass
+
+        with self.assertRaises(TypeError):
+            enc = _CustomJSONEncoder()
+            enc.default(ThisShouldFail())
