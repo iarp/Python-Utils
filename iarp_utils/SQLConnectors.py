@@ -193,7 +193,7 @@ class MSSQL(BaseDatabaseConnector):
 
         return pyodbc.connect(
             '',
-            driver='{SQL Server}',
+            driver=kwargs.get('driver', '{SQL Server}'),
             server=self.hostname,
             uid=self.username,
             pwd=self.password,
