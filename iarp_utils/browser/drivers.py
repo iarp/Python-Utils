@@ -37,6 +37,8 @@ except:
     DEFAULT_DRIVER_ROOT = 'bin/'
 
 WEBDRIVER_IN_PATH = getattr(settings, 'BROWSER_WEBDRIVER_IN_PATH', False)
+CHECK_DRIVER_VERSION = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION', True)
+CHECK_DRIVER_VERSION_INTERVAL = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION_INTERVAL', 24)
 
 log = logging.getLogger('iarp_utils.browser')
 
@@ -70,10 +72,10 @@ class DriverBase:
         self._browser = None
 
         # Whether or not we should check driver version before running the browser.
-        self._check_driver_version = kwargs.get('check_driver_version', True)
+        self._check_driver_version = kwargs.get('check_driver_version', CHECK_DRIVER_VERSION)
 
         # How often (in hours) to check if the driver version needs updating
-        self._check_driver_version_interval = kwargs.get('check_driver_version_interval', 24)
+        self._check_driver_version_interval = kwargs.get('check_driver_version_interval', CHECK_DRIVER_VERSION_INTERVAL)
 
     @property
     def webdriver(self):

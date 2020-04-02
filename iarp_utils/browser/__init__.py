@@ -34,7 +34,7 @@ def wait(seconds=1):  # pragma: no cover
     time.sleep(seconds)
 
 
-DEFAULT_DRIVER = ChromeDriver
+DEFAULT_DRIVER = getattr(settings, 'BROWSER_DEFAULT_DRIVER', ChromeDriver)
 
 
 class BrowserBase:
