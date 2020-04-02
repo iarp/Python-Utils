@@ -34,6 +34,9 @@ def wait(seconds=1):  # pragma: no cover
     time.sleep(seconds)
 
 
+DEFAULT_DRIVER = ChromeDriver
+
+
 class BrowserBase:
     """ Base browser methods that apply to all browsers.
 
@@ -62,7 +65,7 @@ class BrowserBase:
     """
 
     def __init__(self, firefox=False, start_browser=True, global_wait=0, execute_initialize=True,
-                 selected_driver=ChromeDriver, **kwargs):
+                 selected_driver=None, **kwargs):
         """
 
         The purpose behind execute_initialize:
@@ -89,6 +92,9 @@ class BrowserBase:
             selected_driver: class extended from DriverBase, see iarp_utils.drivers.
             kwargs: passed onto the Driver class.
         """
+
+        if not selected_driver:
+            selected_driver = DEFAULT_DRIVER
 
         if WebDriver is None:
             raise ImproperlyConfigured('selenium is required for BrowserBase. pip install iarp_utils[browser]')
