@@ -26,15 +26,15 @@ except ImportError:  # pragma: no cover
 
 try:
     from django.conf import settings
-except ImportError:  # pragma: no cover
+
+    DEFAULT_DRIVER = getattr(settings, 'BROWSER_DEFAULT_DRIVER', ChromeDriver)
+except:  # pragma: no cover
     settings = None
+    DEFAULT_DRIVER = ChromeDriver
 
 
 def wait(seconds=1):  # pragma: no cover
     time.sleep(seconds)
-
-
-DEFAULT_DRIVER = getattr(settings, 'BROWSER_DEFAULT_DRIVER', ChromeDriver)
 
 
 class BrowserBase:

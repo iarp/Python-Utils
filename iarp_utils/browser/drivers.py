@@ -32,13 +32,17 @@ try:
     DEFAULT_DRIVER_ROOT = getattr(settings, 'BROWSER_DRIVER_DIR', None)
     if not DEFAULT_DRIVER_ROOT:
         DEFAULT_DRIVER_ROOT = os.path.join(settings.BASE_DIR, 'bin')
+
+    WEBDRIVER_IN_PATH = getattr(settings, 'BROWSER_WEBDRIVER_IN_PATH', False)
+    CHECK_DRIVER_VERSION = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION', True)
+    CHECK_DRIVER_VERSION_INTERVAL = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION_INTERVAL', 24)
 except:
     settings = None
     DEFAULT_DRIVER_ROOT = 'bin/'
+    WEBDRIVER_IN_PATH = False
+    CHECK_DRIVER_VERSION = True
+    CHECK_DRIVER_VERSION_INTERVAL = 24
 
-WEBDRIVER_IN_PATH = getattr(settings, 'BROWSER_WEBDRIVER_IN_PATH', False)
-CHECK_DRIVER_VERSION = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION', True)
-CHECK_DRIVER_VERSION_INTERVAL = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION_INTERVAL', 24)
 
 log = logging.getLogger('iarp_utils.browser')
 
