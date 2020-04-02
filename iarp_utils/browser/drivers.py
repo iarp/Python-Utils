@@ -152,6 +152,11 @@ class DriverBase:
             if len(data[driver_name]) > 50:
                 data[driver_name] = data[driver_name][:50]
 
+        if not data or not isinstance(data, dict):
+            data = {}
+        if driver_name not in data:
+            data[driver_name] = {}
+
         data[driver_name].insert(0, datetime.datetime.now().isoformat())
 
         with open(dt_file, 'w') as fo:
