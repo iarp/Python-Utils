@@ -8,13 +8,14 @@ import textwrap
 import json
 import base64
 import random
+import math
 
 from .strings import random_character_generator
 
 __GARBAGE_SPLITTER__ = '|----|'
 
 
-def read_funny_data_file(filename: str):
+def read_funny_data_file(filename: str = 'client.txt'):
     """ The file that contains encoded data to be read.
 
     Args:
@@ -38,8 +39,8 @@ def read_funny_data_file(filename: str):
     return decoded_data
 
 
-def write_funny_data_file(filename: str, raw_data, width=80, garbage_length=4000):
-    """ Writes a dict to a file encoded and obfuscated. Obvisouly not
+def write_funny_data_file(filename: str, raw_data, width=80, **kwargs):
+    """ Writes a dict to a file encoded and obfuscated. Obviously not
      secure but secure enough from people who don't know computers
      and programming well enough.
 
@@ -47,9 +48,21 @@ def write_funny_data_file(filename: str, raw_data, width=80, garbage_length=4000
         filename: The file to write to
         raw_data: The data to write.
         width: The license file has text wrapping applied, how many columns?
+    """
+    encoded_string = encode_object(raw_data=raw_data, **kwargs)
+    with open(filename, 'w') as fw:
+        lines = textwrap.wrap(encoded_string, width)
+        fw.write('\n'.join(lines))
+
+
+def encode_object(raw_data, garbage_length=4000, **kwargs):
+    """ Converts objects to a string for use in write_funny_data_file
+
+    Args:
+        raw_data: The data to encode.
         garbage_length: How much garbage to write to the file?
     """
-    garbage = random_character_generator(garbage_length or 2000)
+    garbage = random_character_generator(garbage_length or 4000)
 
     data_type = type(raw_data).__name__
     if isinstance(raw_data, dict):
@@ -58,17 +71,14 @@ def write_funny_data_file(filename: str, raw_data, width=80, garbage_length=4000
     # To make the license file larger, I've added a ton of garbage.
     raw_data = f'py{data_type}|{raw_data}{__GARBAGE_SPLITTER__}{garbage}'
 
-    encoded_string = _encode_funny_data(raw_data, random.randint(5, 999))
-    with open(filename, 'w') as fw:
-        lines = textwrap.wrap(encoded_string, width)
-        fw.write('\n'.join(lines))
+    return _encode_string(raw_data, random.randint(5, 999), **kwargs)
 
 
-def _encode_funny_data(data, n=20, encoding='utf8'):
+def _encode_string(raw_data, n=20, encoding='utf8'):
     if n > 999:
         raise ValueError('n is greater than or equal to 100, 99 or lesser is permitted at this time.')
 
-    encoded_data = base64.b64encode(data.encode(encoding)).decode(encoding)
+    encoded_data = base64.b64encode(raw_data.encode(encoding)).decode(encoding)
     split_encoded = [encoded_data[i:i + n] for i in range(0, len(encoded_data), n)]
 
     new_encoded_string = []
@@ -93,3 +103,25 @@ def _decode_funny_data(encoded_data, encoding='utf8'):
             new_decoded_string.append(item)
         row += 1
     return base64.b64decode(''.join(new_decoded_string)).decode(encoding)
+
+
+def base32_unknown_string(string, replacement='Z', max_length=32, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'):
+    """ Creates a base32 safe string using the given string
+
+    Args:
+        string: The string to encode
+        replacement: The character to be used in replacement of not-permitted characters
+        max_length: max length of code to return, must be a multiple of 8 (8, 16, 24, 32 40, 48 ...etc)
+        chars: The characters that are permitted to be in the string.
+
+    Returns:
+        str that is base32 safe using the email address
+     """
+    if not string:
+        raise ValueError('string is required')
+    string = ''.join([x for x in string.upper() if x in chars])
+    return string.ljust(int(math.ceil(len(string) / 8.0) * 8), replacement)[:max_length]
+
+
+rfdf = read_funny_data_file
+wfdf = write_funny_data_file
