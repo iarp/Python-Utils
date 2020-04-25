@@ -15,7 +15,7 @@ from .strings import random_character_generator
 __GARBAGE_SPLITTER__ = '|----|'
 
 
-def read_funny_data_file(filename: str = 'client.txt'):
+def read_funny_data_file(filename: str = 'client.txt', **kwargs):
     """ The file that contains encoded data to be read.
 
     Args:
@@ -26,17 +26,7 @@ def read_funny_data_file(filename: str = 'client.txt'):
     """
     with open(filename, 'r') as fo:
         certs_data = ''.join(line.strip() for line in fo)
-    decoded_data = _decode_funny_data(certs_data)
-
-    if __GARBAGE_SPLITTER__ in decoded_data:
-        decoded_data, garbage = decoded_data.rsplit(__GARBAGE_SPLITTER__, 1)
-
-    if decoded_data.startswith('pydict|'):
-        decoded_data = json.loads(decoded_data[7:])
-    elif decoded_data.startswith('pystr|'):
-        decoded_data = decoded_data[6:]
-
-    return decoded_data
+    return decode_object(certs_data, **kwargs)
 
 
 def write_funny_data_file(filename: str, raw_data, width=80, **kwargs):
@@ -90,7 +80,21 @@ def _encode_string(raw_data, n=20, encoding='utf8'):
     return '{}{}'.format(''.join(new_encoded_string), str(n).rjust(3, '0'))
 
 
-def _decode_funny_data(encoded_data, encoding='utf8'):
+def decode_object(data, **kwargs):
+    decoded_data = _decode_string(data, **kwargs)
+
+    if __GARBAGE_SPLITTER__ in decoded_data:
+        decoded_data, garbage = decoded_data.rsplit(__GARBAGE_SPLITTER__, 1)
+
+    if decoded_data.startswith('pydict|'):
+        decoded_data = json.loads(decoded_data[7:])
+    elif decoded_data.startswith('pystr|'):
+        decoded_data = decoded_data[6:]
+
+    return decoded_data
+
+
+def _decode_string(encoded_data, encoding='utf8'):
     n = int(encoded_data[-3:])
     data = encoded_data[:-3]
 
