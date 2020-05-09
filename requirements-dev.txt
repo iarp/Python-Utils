@@ -1,5 +1,7 @@
 -r requirements.txt
 selenium
 requests
+responses
 tox
 mock
+pillow
