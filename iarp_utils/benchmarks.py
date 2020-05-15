@@ -1,4 +1,5 @@
 import timeit
+import cProfile
 
 
 class Benchmark:
@@ -38,3 +39,24 @@ class Benchmark:
 
         if exc_type == self.Break:
             return True
+
+
+class Profiler:
+    """ Class that lets you quickly and easily profile some code
+
+    Examples:
+
+        with Profiler():
+            time.sleep(2)
+    """
+    def __init__(self, stats_sort='cumtime'):
+        self.profile = cProfile.Profile()
+        self.stats_sort = stats_sort
+
+    def __enter__(self):
+        self.profile.enable()
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.profile.disable()
+        self.profile.print_stats(sort=self.stats_sort)
