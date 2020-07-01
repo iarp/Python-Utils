@@ -96,7 +96,7 @@ class DriverBase:
     def get_options(self, **kwargs):
 
         if WEBDRIVER_IN_PATH:
-            return dict()
+            return kwargs
 
         try:
             binary = self._driver_binary_location(self.driver)
