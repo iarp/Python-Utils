@@ -4,6 +4,7 @@ import datetime
 from pathlib import Path
 
 from ..browser.drivers import ChromeDriver, DriverBase, FirefoxDriver
+from ..browser.exceptions import LoginFailureException
 from ..exceptions import ImproperlyConfigured
 from ..pidfile import PIDFile
 
@@ -334,22 +335,29 @@ class BrowserBase:
             pass
 
     def login(self, username, password, username_element_attr_value, password_element_attr_value,
-              username_element_attr=By.NAME, password_element_attr=By.NAME):
+              username_element_attr=By.NAME, password_element_attr=By.NAME,
+              check_attempts=5, check_wait_seconds=2):
         """ Base login method used by multiple browsers, based on login screens with with
                 username and password fields displayed on a single screen.
 
-        The *_element_attr_* params indiciate the elements attribute to target and the value of that attribute.
+        The *_element_attr_* params indicate the elements attribute to target and the value of that attribute.
             Such as name="username" is:
                 username_element_attr=By.NAME
                 username_element_attr_value='username'
 
-        :param username: The username to login with
-        :param password: The password to login with
-        :param username_element_attr: The attribute type to find the username element. By.NAME, By.ID, By.XPATH, by.CLASS_NAME
-        :param password_element_attr: The attribute type to find the password element. By.NAME, By.ID, By.XPATH, by.CLASS_NAME
-        :param username_element_attr_value: The value for the attribute supplied to find the username element.
-        :param password_element_attr_value: The value for the attribute supplied to find the password element.
-        :return:
+        Args:
+            username: The username to login with
+            password: The password to login with
+            username_element_attr: The type attribute for the username element. (i.e. type="...")
+            password_element_attr: The type attribute for the password element. (i.e. type="...")
+            username_element_attr_value: The value for the attribute supplied to find the username element.
+            password_element_attr_value: The value for the attribute supplied to find the password element.
+            check_attempts: How many times to check for a username element to check if the login failed.
+            check_wait_seconds: How many seconds to wait between checks for login failure.
+
+        Raises:
+            NoSuchElementException: If username or password elements are not found.
+            LoginFailureException: determined by the username element still existing after submission.
         """
         try:
             username_element = self.browser.find_element(username_element_attr, username_element_attr_value)
@@ -368,7 +376,7 @@ class BrowserBase:
 
         # Re-check for the username element, if NoSuchElementException is thrown then we're then likely logged in.
         checks = 0
-        while True:
+        while checks <= check_attempts:
             checks += 1
 
             try:
@@ -376,11 +384,10 @@ class BrowserBase:
             except NoSuchElementException:
                 break
 
-            if checks >= 5:
-                self.quit()
-                raise ValueError('Login failure, check username and password')
-
-            time.sleep(2)
+            time.sleep(check_wait_seconds)
+        else:
+            self.quit()
+            raise LoginFailureException('Login failure, check username and password')
 
     def save_screenshot(self, filename=None, filename_prefix='', save_dir=None, sub_folder='', notes=None):
 
