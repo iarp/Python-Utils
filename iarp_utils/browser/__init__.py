@@ -399,11 +399,9 @@ class BrowserBase:
                     save_dir = os.path.join(getattr(settings, attr), 'browser_screenshots')
                     break
                 except:
-                    continue
-            else:
-                return
+                    pass
 
-        save_dir = Path(os.path.join(save_dir, sub_folder))
+        save_dir = Path(os.path.join(save_dir or '', sub_folder))
         save_dir.mkdir(parents=True, exist_ok=True)
 
         if not filename:
