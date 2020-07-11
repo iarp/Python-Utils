@@ -3,8 +3,8 @@ import os
 import datetime
 from pathlib import Path
 
-from ..browser.drivers import ChromeDriver, DriverBase, FirefoxDriver
-from ..browser.exceptions import LoginFailureException
+from .drivers import ChromeDriver, DriverBase, FirefoxDriver
+from .exceptions import LoginFailureException
 from ..exceptions import ImproperlyConfigured
 from ..pidfile import PIDFile
 
@@ -65,7 +65,7 @@ class BrowserBase:
                 )
     """
 
-    def __init__(self, firefox=False, start_browser=True, global_wait=0, execute_initialize=True,
+    def __init__(self, start_browser=True, global_wait=0, execute_initialize=True,
                  selected_driver=None, **kwargs):
         """
 
@@ -94,11 +94,9 @@ class BrowserBase:
             kwargs: passed onto the Driver class.
         """
 
-        if not selected_driver:
-            selected_driver = DEFAULT_DRIVER
-
         if WebDriver is None:
-            raise ImproperlyConfigured('selenium is required for BrowserBase. pip install iarp_utils[browser]')
+            raise ImproperlyConfigured(f'selenium is required for {type(self).__name__}. '
+                                       f'Use pip install iarp_utils[browser]')
 
         self.global_wait = global_wait
         self._execute_initialize = execute_initialize
@@ -106,9 +104,7 @@ class BrowserBase:
         self.selected_driver_kwargs = kwargs
         self.active_driver = None  # type: DriverBase
 
-        self.selected_driver = selected_driver
-        if any([firefox]):
-            self.selected_driver = FirefoxDriver
+        self.selected_driver = selected_driver or DEFAULT_DRIVER
 
         if start_browser:
             self.start_browser()
@@ -431,3 +427,15 @@ class BrowserBase:
     @property
     def action_chains(self):
         return ActionChains(self.browser)
+
+
+class FirefoxBrowser(BrowserBase):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('selected_driver', None)
+        super().__init__(*args, selected_driver=FirefoxDriver, **kwargs)
+
+
+class ChromeBrowser(BrowserBase):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('selected_driver', None)
+        super().__init__(*args, selected_driver=ChromeDriver, **kwargs)
