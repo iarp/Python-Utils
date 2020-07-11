@@ -35,12 +35,14 @@ try:
     WEBDRIVER_IN_PATH = getattr(settings, 'BROWSER_WEBDRIVER_IN_PATH', False)
     CHECK_DRIVER_VERSION = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION', True)
     CHECK_DRIVER_VERSION_INTERVAL = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION_INTERVAL', 24)
+    USER_AGENT = getattr(settings, 'BROWSER_USER_AGENT', None)
 except:
     settings = None
     DEFAULT_DRIVER_ROOT = 'bin/'
     WEBDRIVER_IN_PATH = False
     CHECK_DRIVER_VERSION = True
     CHECK_DRIVER_VERSION_INTERVAL = 24
+    USER_AGENT = None
 
 
 log = logging.getLogger('iarp_utils.browser')
@@ -70,7 +72,7 @@ class DriverBase:
 
         self.headless = kwargs.get('headless')
         self._download_directory = kwargs.get('download_directory')
-        self.user_agent = kwargs.get('user_agent')
+        self.user_agent = kwargs.get('user_agent', USER_AGENT)
         self.latest_version = None
         self._browser = None
 
@@ -246,7 +248,8 @@ class ChromeDriver(DriverBase):
                 'download.default_directory': self.download_directory
             })
 
-        # chrome_options.add_argument('--user-agent={}'.format(self.user_agent))
+        if self.user_agent:
+            chrome_options.add_argument(f'--user-agent={self.user_agent}')
 
         return super().get_options(
             chrome_options=chrome_options
@@ -317,7 +320,9 @@ class FirefoxDriver(DriverBase):
 
         profile.set_preference("browser.helperApps.neverAsk.saveToDisk", get_mime_types())
         profile.set_preference('browser.helperApps.alwaysAsk.force', False)
-        # profile.set_preference("general.useragent.override", self.user_agent)
+
+        if self.user_agent:
+            profile.set_preference("general.useragent.override", self.user_agent)
 
         options = webdriver.FirefoxOptions()
         options.headless = self.headless
