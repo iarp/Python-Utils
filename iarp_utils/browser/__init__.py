@@ -296,14 +296,10 @@ class BrowserBase:
         """
         find_by, find_value = self.get_types(*args, **kwargs)
 
+        func = expected_conditions.visibility_of_element_located
         if wait_until_invisible:
-            return WebDriverWait(self.browser, max_wait_in_seconds).until(
-                expected_conditions.invisibility_of_element_located((find_by, find_value))
-            )
-        else:
-            return WebDriverWait(self.browser, max_wait_in_seconds).until(
-                expected_conditions.visibility_of_element_located((find_by, find_value))
-            )
+            func = expected_conditions.invisibility_of_element_located
+        return WebDriverWait(self.browser, max_wait_in_seconds).until(func((find_by, find_value)))
 
     def element_exists(self, *args, **kwargs):
         """ Does the element given exist?
