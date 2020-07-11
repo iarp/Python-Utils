@@ -1,10 +1,10 @@
-import time
 import os
 import datetime
 from pathlib import Path
 
 from .drivers import ChromeDriver, DriverBase, FirefoxDriver
 from .exceptions import LoginFailureException
+from .utils import wait
 from ..exceptions import ImproperlyConfigured
 from ..pidfile import PIDFile
 
@@ -32,10 +32,6 @@ try:
 except:  # pragma: no cover
     settings = None
     DEFAULT_DRIVER = ChromeDriver
-
-
-def wait(seconds=1):  # pragma: no cover
-    time.sleep(seconds)
 
 
 class BrowserBase:
@@ -376,7 +372,7 @@ class BrowserBase:
             except NoSuchElementException:
                 break
 
-            time.sleep(check_wait_seconds)
+            wait(check_wait_seconds)
         else:
             self.quit()
             raise LoginFailureException('Login failure, check username and password')

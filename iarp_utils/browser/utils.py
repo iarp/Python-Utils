@@ -1,4 +1,9 @@
 import platform
+import time
+
+
+def wait(seconds=1):  # pragma: no cover
+    time.sleep(seconds)
 
 
 def get_system_bitness():
