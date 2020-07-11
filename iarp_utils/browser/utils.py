@@ -1,3 +1,14 @@
+import platform
+
+
+def get_system_bitness():
+    b, _ = platform.architecture()
+    return ''.join([d for d in b if d.isdigit()])
+
+
+BITNESS = get_system_bitness()
+
+
 def get_mime_types():
     # https://www.freeformatter.com/mime-types-list.html
     return ",".join(MIME_TYPES_LIST)

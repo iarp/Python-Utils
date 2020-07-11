@@ -8,12 +8,11 @@ import tempfile
 from ..datetimes import fromisoformat
 from ..exceptions import ImproperlyConfigured
 from ..files import download_file, extract_zip_single_file
-from .utils import get_mime_types
+from .utils import BITNESS, get_mime_types
 
 try:
     from selenium import webdriver
     from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
-    from selenium.webdriver.firefox.options import Options as FirefoxOptions
 except ImportError:
     webdriver = None
 
@@ -161,7 +160,7 @@ class DriverBase:
         if not data or not isinstance(data, dict):
             data = {}
         if driver_name not in data:
-            data[driver_name] = {}
+            data[driver_name] = []
 
         data[driver_name].insert(0, datetime.datetime.now().isoformat())
 
@@ -235,10 +234,7 @@ class DriverBase:
 
 class ChromeDriver(DriverBase):
     driver = 'chromedriver.exe'
-
-    @property
-    def webdriver(self):
-        return webdriver.Chrome
+    webdriver = webdriver.Chrome
 
     def get_options(self):
         chrome_options = webdriver.ChromeOptions()
@@ -308,11 +304,8 @@ class ChromeDriver(DriverBase):
 
 
 class FirefoxDriver(DriverBase):
-    driver = 'geckodriver.exe'
-
-    @property
-    def webdriver(self):
-        return webdriver.Firefox
+    driver = 'geckodriver.exe' if os.name == 'nt' else 'geckodriver'
+    webdriver = webdriver.Firefox
 
     def get_options(self):
         profile = webdriver.FirefoxProfile()
@@ -326,7 +319,7 @@ class FirefoxDriver(DriverBase):
         profile.set_preference('browser.helperApps.alwaysAsk.force', False)
         # profile.set_preference("general.useragent.override", self.user_agent)
 
-        options = FirefoxOptions()
+        options = webdriver.FirefoxOptions()
         options.headless = self.headless
 
         return super().get_options(
@@ -353,8 +346,9 @@ class FirefoxDriver(DriverBase):
         except (AttributeError, IndexError, KeyError, TypeError):
             pass
 
+        val_checker = f'win{BITNESS}' if os.name == 'nt' else f'linux{BITNESS}'
         for dl in self.latest_version.get('assets', []):
-            if dl.get('content_type') == 'application/zip' and 'win64' in dl.get('browser_download_url', ''):
+            if dl.get('content_type') == 'application/zip' and val_checker in dl.get('browser_download_url', ''):
                 break
         else:
             return
