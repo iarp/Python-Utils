@@ -225,13 +225,9 @@ class DriverBase:
             self._download_directory = tempfile.mkdtemp()
         return self._download_directory
 
-    def delete_download_directory(self, **kwargs):
-
-        if not self._download_directory:
-            return
-
-        kwargs['ignore_errors'] = kwargs.get('ignore_errors', True)
-        shutil.rmtree(self._download_directory, **kwargs)
+    def delete_download_directory(self, ignore_errors=True, **kwargs):
+        if self._download_directory:
+            shutil.rmtree(self._download_directory, ignore_errors=ignore_errors, **kwargs)
 
 
 class ChromeDriver(DriverBase):
@@ -240,8 +236,7 @@ class ChromeDriver(DriverBase):
 
     def get_options(self):
         chrome_options = webdriver.ChromeOptions()
-        if self.headless:
-            chrome_options.add_argument('--headless')
+        chrome_options.headless = self.headless
 
         if self.download_directory:
             chrome_options.add_experimental_option('prefs', {
@@ -251,9 +246,7 @@ class ChromeDriver(DriverBase):
         if self.user_agent:
             chrome_options.add_argument(f'--user-agent={self.user_agent}')
 
-        return super().get_options(
-            chrome_options=chrome_options
-        )
+        return super().get_options(chrome_options=chrome_options)
 
     def get_browser_version(self):
         capabilities = self.get_capabilities()
@@ -312,14 +305,13 @@ class FirefoxDriver(DriverBase):
 
     def get_options(self):
         profile = webdriver.FirefoxProfile()
-        profile.set_preference('browser.download.folderList', 2)
-        profile.set_preference('pdfjs.disabled', True)
 
         if self.download_directory:
+            profile.set_preference('browser.download.folderList', 2)
+            profile.set_preference('pdfjs.disabled', True)
             profile.set_preference('browser.download.dir', self.download_directory)
-
-        profile.set_preference("browser.helperApps.neverAsk.saveToDisk", get_mime_types())
-        profile.set_preference('browser.helperApps.alwaysAsk.force', False)
+            profile.set_preference("browser.helperApps.neverAsk.saveToDisk", get_mime_types())
+            profile.set_preference('browser.helperApps.alwaysAsk.force', False)
 
         if self.user_agent:
             profile.set_preference("general.useragent.override", self.user_agent)
@@ -327,10 +319,7 @@ class FirefoxDriver(DriverBase):
         options = webdriver.FirefoxOptions()
         options.headless = self.headless
 
-        return super().get_options(
-            options=options,
-            firefox_profile=profile,
-        )
+        return super().get_options(options=options, firefox_profile=profile)
 
     def check_driver_version(self):
         """ Check to ensure the local geckodriver being used is valid for the firefox installation. """
@@ -346,7 +335,7 @@ class FirefoxDriver(DriverBase):
         try:
             driver_version = capabilities['moz:geckodriverVersion']
 
-            if self.latest_version['tag_name'][1:] == driver_version:
+            if self.latest_version['tag_name'].replace('v', '') == driver_version:
                 return
         except (AttributeError, IndexError, KeyError, TypeError):
             pass
