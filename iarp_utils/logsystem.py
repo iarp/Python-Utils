@@ -17,11 +17,10 @@ class LogSystem:
 
     """
 
-    def __init__(self, level=logging.DEBUG, log_path=None, config_file='setup/config.json', config=None, **kwargs):
-        self.log_path = log_path or 'logs'
-        self.level = level or 'INFO'
+    def __init__(self, level=None, log_path=None, config_file='setup/config.json', config=None, **kwargs):
+        self.log_path = log_path
+        self.level = level
         self.handlers = []
-        self.root_path = None
 
         # This variable controls whether or not logging is enabled or disabled.
         self.propagate = kwargs.pop('propagate', True)
@@ -32,24 +31,24 @@ class LogSystem:
             raise ValueError('config must be dict')
 
         # Allow end-user to select a logging level
-        config_level = config.get('logging', {}).get('level', '').upper()
-        if config_level:
-            if config_level in ['OFF', 'DISABLE', 'DISABLED', '0', 'FALSE']:
-                self.propagate = False
-                self.level = logging.CRITICAL
-            elif hasattr(logging, config_level):
-                self.level = getattr(logging, config_level)
+        if self.level is None:
+            config_level = config.get('logging', {}).get('level', '').upper()
+            if config_level:
+                if config_level in ['OFF', 'DISABLE', 'DISABLED', '0', 'FALSE']:
+                    self.propagate = False
+                    self.level = logging.CRITICAL
+                elif hasattr(logging, config_level):
+                    self.level = getattr(logging, config_level)
+            else:
+                self.level = logging.DEBUG
 
         # If we were not given a path to save the logs to attempt to load one from config.
-        if not self.log_path:
+        if self.log_path is None:
             self.log_path = config.get('logging', {}).get('save_path', None)
-            self.root_path = self.log_path
 
         # If we were not given a path and config does not contain one this is our default path.
         if not self.log_path:
-            root_path, _ = os.path.split(os.path.abspath('logs'))
-            self.root_path = os.path.join(root_path, 'logs')
-            self.log_path = os.path.join(self.root_path, '{{date}}')
+            self.log_path = os.path.join(os.path.abspath('logs'), '{{date}}')
 
         # These are dynamic variables allowed in the log path.
         now = datetime.datetime.now()
@@ -59,8 +58,7 @@ class LogSystem:
             '{{datetime}}': now.strftime('%Y-%m-%d %H%M%S'),
         })
 
-        if not os.path.isdir(self.log_path):
-            os.makedirs(self.log_path)
+        os.makedirs(self.log_path, exist_ok=True)
 
     def close(self):
         for handler in self.handlers:
@@ -68,7 +66,7 @@ class LogSystem:
 
     def setup_logs(self, logger_name, write_mode='a', write_to_console=True, write_to_file=True,
                    file_formatter='%(asctime)s - %(levelname)s - %(message)s',
-                   console_formatter='%(name)s - %(asctime)s - %(message)s'):
+                   console_formatter='%(name)s - %(asctime)s - %(message)s', level=None, propagate=None):
         """ Returns a logger object that will log to the logger_name.log filename given.
 
         Args:
@@ -78,6 +76,8 @@ class LogSystem:
             write_to_file: Whether or not to write to a file.
             file_formatter: Log handler formatter for writing to the file
             console_formatter: Log handler formatter for writing to console.
+            level: Log level, overriding the initial configuration setting.
+            propagate: Log propagate, overriding the initial configuration setting.
 
         Returns:
             logging.getLogger
@@ -91,8 +91,8 @@ class LogSystem:
         if log.handlers:
             return log
 
-        log.propagate = self.propagate
-        log.setLevel(self.level)
+        log.propagate = self.propagate if propagate is None else propagate
+        log.setLevel(level or self.level)
 
         if write_to_file:
             log_file = os.path.join(self.log_path, '{}.log'.format(logger_name))

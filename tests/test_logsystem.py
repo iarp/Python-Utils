@@ -11,8 +11,6 @@ class LogSystemTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.logsystem.close()
-        if self.logsystem.root_path:
-            shutil.rmtree(self.logsystem.root_path)
 
     def test_basics(self):
         log = self.logsystem.setup_logs('test_basics', write_mode='w')
