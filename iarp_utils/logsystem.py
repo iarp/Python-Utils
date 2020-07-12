@@ -30,7 +30,7 @@ class LogSystem:
         elif not isinstance(config, dict):
             raise ValueError('config must be dict')
 
-        # Allow end-user to select a logging level
+        # If no level is supplied attempt to load one from config
         if self.level is None:
             config_level = config.get('logging', {}).get('level')
             if config_level is not None:
@@ -40,6 +40,8 @@ class LogSystem:
                     self.level = logging.CRITICAL
                 elif isinstance(config_level, str):
                     self.level = getattr(logging, config_level.upper(), None)
+                elif isinstance(config_level, int) and 0 <= config_level <= 50:
+                    self.level = config_level
 
         if not self.level:
             self.level = logging.DEBUG
