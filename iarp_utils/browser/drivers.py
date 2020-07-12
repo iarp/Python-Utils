@@ -9,7 +9,7 @@ import warnings
 from ..datetimes import fromisoformat
 from ..exceptions import ImproperlyConfigured
 from ..files import download_file, extract_zip_single_file
-from .utils import BITNESS, get_mime_types
+from .utils import BITNESS, get_mime_types, IS_WINDOWS_OS
 
 try:
     from selenium import webdriver
@@ -300,7 +300,7 @@ class ChromeDriver(DriverBase):
 
 
 class FirefoxDriver(DriverBase):
-    driver = 'geckodriver.exe' if os.name == 'nt' else 'geckodriver'
+    driver = 'geckodriver.exe' if IS_WINDOWS_OS else 'geckodriver'
     webdriver = webdriver.Firefox
 
     def get_options(self):
@@ -343,7 +343,7 @@ class FirefoxDriver(DriverBase):
         except (AttributeError, IndexError, KeyError, TypeError):
             pass
 
-        val_checker = f'win{BITNESS}' if os.name == 'nt' else f'linux{BITNESS}'
+        val_checker = f'win{BITNESS}' if IS_WINDOWS_OS else f'linux{BITNESS}'
         for dl in self.latest_version.get('assets', []):
             if dl.get('content_type') == 'application/zip' and val_checker in dl.get('browser_download_url', ''):
                 break
