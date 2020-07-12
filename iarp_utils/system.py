@@ -1,5 +1,9 @@
 from pathlib import Path
-import psutil
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 
 def is_pid_still_running(pid_file, delete=True):
@@ -12,6 +16,10 @@ def is_pid_still_running(pid_file, delete=True):
     Returns:
         bool if pid is running
     """
+
+    if not psutil:
+        raise ImportError('psutil is required for this functionality. "pip install psutil"')
+
     pid_file = Path(pid_file)
 
     if not pid_file.exists():

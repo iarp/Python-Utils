@@ -5,3 +5,4 @@ responses
 tox
 mock
 pillow
+psutil
