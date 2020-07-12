@@ -1,5 +1,6 @@
 import platform
 import time
+import os
 
 
 def wait(seconds=1):  # pragma: no cover
@@ -12,6 +13,8 @@ def get_system_bitness():
 
 
 BITNESS = get_system_bitness()
+
+IS_WINDOWS_OS = os.name == 'nt'
 
 
 def get_mime_types():

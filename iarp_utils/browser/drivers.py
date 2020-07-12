@@ -4,6 +4,7 @@ import logging
 import os
 import shutil
 import tempfile
+import warnings
 
 from ..datetimes import fromisoformat
 from ..exceptions import ImproperlyConfigured
@@ -21,8 +22,6 @@ try:
 except ImportError:
     requests = None
 
-# DEFAULT_DRIVER_ROOT is the folder where chromedriver.exe
-#  or geckodriver.exe should be stored.
 try:
     from django.conf import settings
 
@@ -67,8 +66,6 @@ class DriverBase:
 
         if webdriver is None:
             raise ImproperlyConfigured('selenium is required for iarp_utils.browser to operate. pip install selenium')
-        if requests is None:
-            raise ImproperlyConfigured('requests is required for iarp_utils.browser to operate. pip install requests')
 
         self.headless = kwargs.get('headless')
         self._download_directory = kwargs.get('download_directory')
@@ -267,6 +264,9 @@ class ChromeDriver(DriverBase):
 
         if WEBDRIVER_IN_PATH:
             return
+        if not requests:
+            warnings.warn('requests not installed. Required to auto-download browser driver. "pip install requests"', ImportWarning)
+            return
 
         root_url = 'https://chromedriver.storage.googleapis.com/'
 
@@ -325,6 +325,9 @@ class FirefoxDriver(DriverBase):
         """ Check to ensure the local geckodriver being used is valid for the firefox installation. """
 
         if WEBDRIVER_IN_PATH:
+            return
+        if not requests:
+            warnings.warn('requests not installed. Required to auto-download browser driver. "pip install requests"', ImportWarning)
             return
 
         capabilities = self.get_capabilities()
