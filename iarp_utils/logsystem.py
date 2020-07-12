@@ -32,15 +32,17 @@ class LogSystem:
 
         # Allow end-user to select a logging level
         if self.level is None:
-            config_level = config.get('logging', {}).get('level', '').upper()
-            if config_level:
-                if config_level in ['OFF', 'DISABLE', 'DISABLED', '0', 'FALSE']:
+            config_level = config.get('logging', {}).get('level')
+            if config_level is not None:
+                disabled_levels = ['OFF', 'DISABLE', 'DISABLED', '0', 'FALSE']
+                if not config_level or (isinstance(config_level, str) and config_level.upper() in disabled_levels):
                     self.propagate = False
                     self.level = logging.CRITICAL
-                elif hasattr(logging, config_level):
-                    self.level = getattr(logging, config_level)
-            else:
-                self.level = logging.DEBUG
+                elif isinstance(config_level, str):
+                    self.level = getattr(logging, config_level.upper(), None)
+
+        if not self.level:
+            self.level = logging.DEBUG
 
         # If we were not given a path to save the logs to attempt to load one from config.
         if self.log_path is None:
