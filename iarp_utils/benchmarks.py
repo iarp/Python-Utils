@@ -5,7 +5,7 @@ import cProfile
 class Benchmark:
     """ Class that lets you quickly and easily calculate the time for something to run
 
-    Examples:
+    Examples::
 
         with Benchmark('join fn ln'):
             for x in range(1000000):
@@ -44,7 +44,7 @@ class Benchmark:
 class Profiler:
     """ Class that lets you quickly and easily profile some code
 
-    Examples:
+    Examples::
 
         with Profiler():
             time.sleep(2)

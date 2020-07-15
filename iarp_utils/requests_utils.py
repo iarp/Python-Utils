@@ -4,7 +4,8 @@ from requests.auth import AuthBase
 class BearerAuth(AuthBase):
     """ Easy usage of bearer auth in headers.
 
-    Examples:
+    Examples::
+
         requests.get('https://www.example.com/', auth=BearerAuth('3pVzwec1Gs1m'))
     """
 

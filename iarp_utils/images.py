@@ -3,9 +3,6 @@ from PIL import Image
 
 def create_thumbnail(infile, outfile, width, height):
     """
-    Examples:
-        create_thumbnail('image.jpg', 'image_thumb.jpg', 300, 300)
-
     Args:
         infile: Name of file to open and create thumbnail from
         outfile: Name of the thumbnail file

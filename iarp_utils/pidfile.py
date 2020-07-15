@@ -19,7 +19,7 @@ class PIDFile(object):
 
     The lock only exists until the context closes.
 
-    Examples:
+    Examples::
 
         with PIDFile('test') as good:
 

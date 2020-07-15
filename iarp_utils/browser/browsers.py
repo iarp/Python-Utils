@@ -42,7 +42,7 @@ class BrowserBase:
         and then click a menu item. The reason is there was never a time whenever I login and not
         HAVE to click on that menu item.
 
-    An example of a browser:
+    # An example of a browser:
 
         class GitHubBrowser(BrowserBase):
 
@@ -59,29 +59,29 @@ class BrowserBase:
                     password_element_attr=By.NAME,
                     password_element_attr_value='password'
                 )
+
+
+    The purpose behind execute_initialize:
+        I needed a way to check that the login credentials provided are correct BUT I didn't want the
+        entirety of the override initialize method to be executed. So I ended up creating another
+        method called check_login and then use the following code:
+
+            try:
+                br = CustomBrowser(headless=True, execute_initialize=False)
+                br.initialize(login_check=True)
+                return True
+            except:
+                return False
+
+    The code above would when login but NOT execute the rest of my initialize code, only the necessary
+        stuff to ensure the login credentials work.
+
     """
 
     def __init__(self, start_browser=True, global_wait=0, execute_initialize=True,
                  selected_driver=None, **kwargs):
         """
-
-        The purpose behind execute_initialize:
-            I needed a way to check that the login credentials provided are correct BUT I didn't want the
-            entirety of the override initialize method to be executed. So I ended up creating another
-            method called check_login and then use the following code:
-
-                try:
-                    br = CustomBrowser(headless=True, execute_initialize=False)
-                    br.initialize(login_check=True)
-                    return True
-                except:
-                    return False
-
-            That code would when login but NOT execute the rest of my initialize code, only the necessary
-                stuff to ensure the login credentials work.
-
         Args:
-            firefox: A boolean indicating if it should use Mozilla Firefox
             start_browser: Boolean if we should start the browser immediately. If you pass False,
                             you must call .start_browser() yourself when you're ready.
             global_wait: An integer of how many seconds to wait between each call to the browser.
@@ -198,7 +198,6 @@ class BrowserBase:
 
         Args:
 
-            One of the following:
             element_name: the name="" value of the element
             element_id: the id="" value of the element
             element_class: the class="" value of the element
@@ -217,14 +216,15 @@ class BrowserBase:
     def fill_input_element(self, value, *args, **kwargs):
         """Finds an element and fills it in using value given.
 
-        Args:
+        Args::
+
             value: The value to fill into the element
 
-            And one of the following:
+            # And one of the following:
             element_name: the name="" value of the element
             element_id: the id="" value of the element
             element_class: the class="" value of the element
-          a  element_xpath: Google xpath searching
+            element_xpath: Google xpath searching
 
         Raises:
             NoSuchElementException: If the element was not foun
@@ -243,12 +243,14 @@ class BrowserBase:
         """ Find and select a specific option element
 
          Args:
-             One of the following:
-             value: value="" of <option>
-             text: Displayed text of <option>
-             index: Index of the <option>
 
-             And one of the following:
+             # Only one of the following
+
+             value: value="" of option element
+             text: Displayed text of option element
+             index: Index of the option element
+
+             # And one of the following:
              element_name: the name="" value of the element
              element_id: the id="" value of the element
              element_class: the class="" value of the element
@@ -422,12 +424,18 @@ class BrowserBase:
 
 
 class FirefoxBrowser(BrowserBase):
+    """
+        BrowserBase preconfigured to run as Firefox browser.
+    """
     def __init__(self, *args, **kwargs):
         kwargs.pop('selected_driver', None)
         super().__init__(*args, selected_driver=FirefoxDriver, **kwargs)
 
 
 class ChromeBrowser(BrowserBase):
+    """
+        BrowserBase preconfigured to run as Chrome browser.
+    """
     def __init__(self, *args, **kwargs):
         kwargs.pop('selected_driver', None)
         super().__init__(*args, selected_driver=ChromeDriver, **kwargs)

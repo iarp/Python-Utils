@@ -74,7 +74,8 @@ def unique_file_exists(folder, filename, extension, filename_format="{filename}_
     Example of a matching filename: test_#.pdf where # is however many iterations
         had to occur to find the unique name
 
-    Change the unique filename pattern by supplying filename_format:
+    Change the unique filename pattern by supplying filename_format::
+
         {filename} - The files name.
         {value} - What value are we on attempting to make a unique filename.
         {extension} - The files extension.
@@ -86,7 +87,7 @@ def unique_file_exists(folder, filename, extension, filename_format="{filename}_
         >>> unique_file_exists('/tmp', 'mypdf', 'pdf')
         /tmp/mypdf.pdf
 
-        # Assuming /tmp/mypdf.pdf exists:
+        Assuming /tmp/mypdf.pdf exists:
         >>> unique_file_exists('/tmp', 'mypdf', 'pdf')
         /tmp/mypdf_1.pdf
 

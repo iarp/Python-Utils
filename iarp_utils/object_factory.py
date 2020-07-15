@@ -5,7 +5,7 @@ class ObjectFactory:
     """
         https://realpython.com/factory-method-python/#recognizing-opportunities-to-use-factory-method
 
-    Examples:
+    Examples::
 
         class LocalService:
             def __init__(self, location):

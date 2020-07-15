@@ -4,10 +4,16 @@ import os
 
 
 def wait(seconds=1):  # pragma: no cover
+    """ A wrapping for time.sleep depending on if we change how we wait in the future.
+
+    Args:
+        seconds: How many seconds to wait
+    """
     time.sleep(seconds)
 
 
 def get_system_bitness():
+    """ Returns 32 or 64 depending on OS bitness"""
     b, _ = platform.architecture()
     return ''.join([d for d in b if d.isdigit()])
 
@@ -18,7 +24,10 @@ IS_WINDOWS_OS = os.name == 'nt'
 
 
 def get_mime_types():
-    # https://www.freeformatter.com/mime-types-list.html
+    """ Returns comma separated list of mime types for use in browser downloads.
+
+    List from https://www.freeformatter.com/mime-types-list.html
+    """
     return ",".join(MIME_TYPES_LIST)
 
 

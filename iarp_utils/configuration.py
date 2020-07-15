@@ -201,7 +201,8 @@ def load(file_location='config.json', use_relative_path=False, resave_on_load=Tr
     You can manually update the password value by changing it directly in the json file.
     It will auto-resave on next load.
 
-    Example config.json:
+    Example config.json::
+
         {
             "SQL": {
                 "hostname": "127.0.0.1",
@@ -214,7 +215,8 @@ def load(file_location='config.json', use_relative_path=False, resave_on_load=Tr
             }
         }
 
-    Example output from load using above example config.json
+    Example output from load using above example config.json::
+
         {
             'SQL': {
                 'hostname': '127.0.0.1',
@@ -258,13 +260,14 @@ def load(file_location='config.json', use_relative_path=False, resave_on_load=Tr
 def save(config: dict, file_location='config.json', use_relative_path=False, encode_passwords=True, keys_to_encode=None):
     """ Saves the configuration ini file.
 
-    Examples:
+    Examples:"
 
-        >>> config = {'SQL': {'hostname': '192.168.1.2', ...}}
-        >>> save(config, 'config.json')
+        config = {'SQL': {'hostname': '192.168.1.2', ...}}
+        save(config, 'config.json')
 
-        If using something like py2exe, cx_Freeze or the like, supply use_relative_path=True
-        >>> save(config, 'config.jsoni', use_relative_path=True)
+        # If using something like py2exe, cx_Freeze or the like,
+        # supply use_relative_path=True
+        save(config, 'config.jsoni', use_relative_path=True)
 
     Args:
         config: dict of information to save

@@ -13,9 +13,10 @@ def replace_all(text: str, replace_withs: dict):
         >>> replace_all(my_text, replacers)
         custom string replacing newvalue1, or newvalue2
 
-    Advanced Examples:
-        You can also pass a dict with a sublist of bad values
-            to be converted into good values:
+    Advanced Examples::
+
+        # You can also pass a dict with a sublist of bad values
+        # to be converted into good values:
         >>> data = {
         >>>     'Good Value': ['Bad Value 1', 'Bad Value 2']
         >>> }
