@@ -1,4 +1,6 @@
 from pathlib import Path
+import os
+import subprocess
 
 try:
     import psutil
@@ -40,3 +42,14 @@ def is_pid_still_running(pid_file, delete=True):
         pid_file.unlink()
 
     return False
+
+
+def get_system_bitness():
+    """ Returns 32 or 64 depending on OS bitness"""
+    if os.name == 'nt':
+        output = subprocess.check_output(['wmic', 'os', 'get', 'OSArchitecture'])
+        arch = output.split()[1].decode('utf8')
+        return ''.join([x for x in arch if x.isdigit()])
+    else:
+        output = subprocess.check_output(['uname', '-m']).decode('utf8')
+        return '64' if 'x86_64' in output else '32'

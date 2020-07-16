@@ -1,4 +1,4 @@
-import platform
+from ..system import get_system_bitness
 import time
 import os
 
@@ -10,12 +10,6 @@ def wait(seconds=1):  # pragma: no cover
         seconds: How many seconds to wait
     """
     time.sleep(seconds)
-
-
-def get_system_bitness():
-    """ Returns 32 or 64 depending on OS bitness"""
-    b, _ = platform.architecture()
-    return ''.join([d for d in b if d.isdigit()])
 
 
 BITNESS = get_system_bitness()
