@@ -92,6 +92,14 @@ class DriverBase:
         return self._browser
 
     def get_options(self, **kwargs):
+        """ Returns a dict ready for driver initialization, base locates the driver.
+
+        Args:
+            **kwargs: other keyword params to pass
+
+        Returns:
+            dict
+        """
 
         if WEBDRIVER_IN_PATH:
             return kwargs
@@ -108,6 +116,7 @@ class DriverBase:
         return kwargs
 
     def start(self):
+        """ Starts the driver and browser with all options. """
         # If start was already called, attempt to kill the existing session.
         self.quit()
 
@@ -169,7 +178,11 @@ class DriverBase:
         return allowed
 
     def check_driver_version(self):
-        raise NotImplementedError(f'{type(self).__name__} must implement check_driver_version method')
+        """ Called just before driver initialization and intended
+        to be used to determine if a driver is installed and up to date.
+
+        Must be overridden by child class"""
+        pass
 
     def get_capabilities(self):
         return getattr(self._browser, 'capabilities', None)
@@ -204,6 +217,7 @@ class DriverBase:
         raise FileNotFoundError('browser driver not found')
 
     def quit(self, **kwargs):
+        """ Cleanup and close the driver"""
         self.delete_download_directory(**kwargs)
         try:
             self._browser.quit()
