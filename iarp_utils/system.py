@@ -8,6 +8,9 @@ except ImportError:
     psutil = None
 
 
+IS_WINDOWS_OS = os.name == 'nt'
+
+
 def is_pid_still_running(pid_file, delete=True):
     """ Determines if a given PID in a pid file is still running.
 

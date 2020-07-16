@@ -8,8 +8,8 @@ import warnings
 
 from ..datetimes import fromisoformat
 from ..exceptions import ImproperlyConfigured
-from ..files import download_file, extract_zip_single_file
-from .utils import BITNESS, get_mime_types, IS_WINDOWS_OS
+from ..files import download_file, extract_zip_single_file, get_mime_types_as_str
+from ..system import get_system_bitness, IS_WINDOWS_OS
 
 try:
     from selenium import webdriver
@@ -324,7 +324,7 @@ class FirefoxDriver(DriverBase):
             profile.set_preference('browser.download.folderList', 2)
             profile.set_preference('pdfjs.disabled', True)
             profile.set_preference('browser.download.dir', self.download_directory)
-            profile.set_preference("browser.helperApps.neverAsk.saveToDisk", get_mime_types())
+            profile.set_preference("browser.helperApps.neverAsk.saveToDisk", get_mime_types_as_str(joiner=','))
             profile.set_preference('browser.helperApps.alwaysAsk.force', False)
 
         if self.user_agent:
@@ -357,6 +357,7 @@ class FirefoxDriver(DriverBase):
         except (AttributeError, IndexError, KeyError, TypeError):
             pass
 
+        BITNESS = get_system_bitness()
         val_checker = f'win{BITNESS}' if IS_WINDOWS_OS else f'linux{BITNESS}'
         for dl in self.latest_version.get('assets', []):
             if dl.get('content_type') == 'application/zip' and val_checker in dl.get('browser_download_url', ''):
