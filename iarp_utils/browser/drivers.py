@@ -120,10 +120,10 @@ class DriverBase:
         # If start was already called, attempt to kill the existing session.
         self.quit()
 
-        self._browser = self.webdriver(**self.get_options())
-
         if self._check_driver_version_allowed():
             self.check_driver_version()
+
+        self._browser = self.webdriver(**self.get_options())
 
         return self.browser
 
