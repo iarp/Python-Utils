@@ -1,10 +1,10 @@
 import os
 import datetime
 from pathlib import Path
+import time
 
 from .drivers import ChromeDriver, DriverBase, FirefoxDriver
 from .exceptions import LoginFailureException
-from .utils import wait
 from ..exceptions import ImproperlyConfigured
 from ..pidfile import PIDFile
 
@@ -180,7 +180,7 @@ class BrowserBase:
         """
 
         if self.global_wait:
-            wait(self.global_wait)
+            self._wait()
 
         if element_id:
             return By.ID, element_id
@@ -374,7 +374,7 @@ class BrowserBase:
             except NoSuchElementException:
                 break
 
-            wait(check_wait_seconds)
+            self._wait(check_wait_seconds)
         else:
             self.quit()
             raise LoginFailureException('Login failure, check username and password')
@@ -421,6 +421,16 @@ class BrowserBase:
     @property
     def action_chains(self):
         return ActionChains(self.browser)
+
+    def _wait(self, seconds=None):
+        """ Used to add delay in certain actions
+
+        Args:
+            seconds: how many seconds to wait?
+        """
+        if seconds is None:
+            seconds = self.global_wait
+        time.sleep(seconds)
 
 
 class FirefoxBrowser(BrowserBase):
