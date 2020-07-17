@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from iarp_utils.system import is_pid_still_running
+from iarp_utils.system import is_pid_still_running, get_system_bitness
 
 
 class SystemsTests(unittest.TestCase):
@@ -28,3 +28,6 @@ class SystemsTests(unittest.TestCase):
 
         if os.path.exists(pid_file):
             os.remove(pid_file)
+
+    def test_system_bitness_is_32_or_64(self):
+        self.assertIn(get_system_bitness(), ['32', '64'])
