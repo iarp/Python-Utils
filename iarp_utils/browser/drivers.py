@@ -62,10 +62,19 @@ def download_and_extract_zip_file(url, local_zip_file, extracting_file, **kwargs
 
 class DriverBase:
 
+    webdriver = None
+    driver = None
+
     def __init__(self, **kwargs):
 
         if webdriver is None:
             raise ImproperlyConfigured('selenium is required for iarp_utils.browser to operate. pip install selenium')
+
+        if not self.webdriver:
+            raise NotImplementedError('webdriver property must be supplied')
+
+        if not self.driver:
+            raise NotImplementedError('driver property must be supplied')
 
         self.headless = kwargs.get('headless')
         self._download_directory = kwargs.get('download_directory')
@@ -78,14 +87,6 @@ class DriverBase:
 
         # How often (in hours) to check if the driver version needs updating
         self._check_driver_version_interval = kwargs.get('check_driver_version_interval', CHECK_DRIVER_VERSION_INTERVAL)
-
-    @property
-    def webdriver(self):
-        raise NotImplementedError('webdriver property must be supplied')
-
-    @property
-    def driver(self):
-        raise NotImplementedError('driver property must be supplied')
 
     @property
     def browser(self) -> RemoteWebDriver:
