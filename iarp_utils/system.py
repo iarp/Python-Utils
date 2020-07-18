@@ -49,9 +49,9 @@ def is_pid_still_running(pid_file, delete=True):
 
 def get_system_bitness():
     """ Returns 32 or 64 depending on OS bitness"""
-    if os.name == 'nt':
-        output = subprocess.check_output(['wmic', 'os', 'get', 'OSArchitecture'])
-        arch = output.split()[1].decode('utf8')
+    if IS_WINDOWS_OS:
+        output = subprocess.check_output(['wmic', 'os', 'get', 'OSArchitecture']).decode('utf8')
+        arch = output.split()[1]
         return ''.join([x for x in arch if x.isdigit()])
     else:
         output = subprocess.check_output(['uname', '-m']).decode('utf8')
