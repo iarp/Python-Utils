@@ -257,7 +257,7 @@ class ChromeDriver(DriverBase):
         if self.user_agent:
             chrome_options.add_argument(f'--user-agent={self.user_agent}')
 
-        return super().get_options(chrome_options=chrome_options)
+        return super().get_options(options=chrome_options)
 
     def get_browser_version(self):
         capabilities = self.get_capabilities()
