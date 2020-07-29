@@ -24,8 +24,6 @@ def chrome_version(browser_type=ChromeType.GOOGLE):
     Returns:
         str containing version of chrome
     """
-    pattern = r'\d+\.\d+\.\d+\.\d+|\d+\.\d+\.\d+'
-
     cmd_mapping = {
         ChromeType.GOOGLE: {
             OSTypes.LINUX: 'google-chrome --version || google-chrome-stable --version',
@@ -43,59 +41,50 @@ def chrome_version(browser_type=ChromeType.GOOGLE):
         }
     }
 
-    cmd = cmd_mapping[browser_type][os_name()]
-    stdout = subprocess.check_output(cmd).decode('utf-8')
-    version = re.search(pattern, stdout)
-    if not version:
-        raise ValueError(f'Could not get version for Chrome with this command: {cmd}')
-    current_version = version.group(0)
-    return current_version
+    cmds = cmd_mapping[browser_type][os_name()]
+    return _process_version_commands('Google Chrome', cmds)
 
 
 def binary_file_version(binary, version_flag='--version'):
     return subprocess.check_output([binary, version_flag]).decode('utf-8').split(' ')[1]
 
 
-def firefox_version(browser_type=ChromeType.GOOGLE):
+def firefox_version():
     """ Obtain the version of Mozilla Firefox being controlled.
 
-    Args:
-        browser_type: google, chromium, msedge
-
     Returns:
-        str containing version of chrome
+        str containing version of firefox
     """
-    pattern = r'\d+\.\d+\.\d+'
-
     cmd_mapping = {
-        ChromeType.GOOGLE: {
-            OSTypes.WIN: [
-                r'"C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe" --version',
-                r'"C:\\Program Files\\Mozilla Firefox\\firefox.exe" --version'
-            ]
-        },
+        OSTypes.WIN: [
+            r'"C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe" --version',
+            r'"C:\\Program Files\\Mozilla Firefox\\firefox.exe" --version'
+        ]
     }
 
-    cmd = cmd_mapping.get(browser_type, {}).get(os_name())
+    cmds = cmd_mapping.get(os_name())
+    return _process_version_commands('Chrome', cmds)
 
-    if not cmd:
-        raise ValueError(f'No command found for {browser_type} with os {os_name()}')
 
-    stdout = None
-    if isinstance(cmd, list):
-        for cmd in cmd.copy():
-            try:
-                stdout = subprocess.check_output(cmd)
-            except:
-                pass
+def _process_version_commands(name, cmds, pattern=r'\d+\.\d+\.\d+\.\d+|\d+\.\d+\.\d+'):
+
+    if not cmds:
+        raise ValueError(f'No command found for {name} version with os {os_name()}')
+
+    if isinstance(cmds, str):
+        cmds = [cmds]
+
+    for cmd in cmds:
+        try:
+            stdout = subprocess.check_output(cmd)
+            break
+        except:
+            pass
     else:
-        stdout = subprocess.check_output(cmd)
-
-    if not stdout:
-        raise ValueError(f'Could not get version for Mozilla Firefox with this command: {cmd}')
+        raise ValueError(f'Could not get version for {name} with this command: {cmds}')
 
     version = re.search(pattern, stdout.decode('utf-8'))
     if not version:
-        raise ValueError(f'Could not process version for Mozilla Firefox commands output: {cmd}')
+        raise ValueError(f'Could not process version for {name} commands output: {cmds}')
     current_version = version.group(0)
     return current_version
