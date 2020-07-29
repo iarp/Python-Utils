@@ -3,7 +3,6 @@ import json
 import logging
 import os
 import shutil
-import subprocess
 import tempfile
 import warnings
 
@@ -46,7 +45,7 @@ except:
     USER_AGENT = None
 
 
-log = logging.getLogger('iarp_utils.browser')
+log = logging.getLogger('iarp_utils.browser.drivers')
 
 
 def download_and_extract_zip_file(url, local_zip_file, extracting_file, **kwargs):
@@ -132,7 +131,12 @@ class DriverBase:
 
     def _check_driver_version_allowed(self):
 
-        if not self._check_driver_version or WEBDRIVER_IN_PATH:
+        if not self._check_driver_version:
+            log.debug('webdriver check: not checking due to check_driver_version=False')
+            return False
+
+        if WEBDRIVER_IN_PATH:
+            log.debug('webdriver check: not checking due to WEBDRIVER_IN_PATH=True')
             return False
 
         dt_file = os.path.join(DEFAULT_DRIVER_ROOT, 'check_driver_version.json')
@@ -156,13 +160,15 @@ class DriverBase:
                 last_checked = fromisoformat(data[driver_name][0])
                 hours_ago = datetime.datetime.now() - datetime.timedelta(hours=self._check_driver_version_interval)
                 allowed = hours_ago >= last_checked
+
+                # If check is not allowed to happen, return now as to prevent
+                # another timestamp from being saved.
+                if not allowed:
+                    log.debug(f'webdriver check: not allowed due to check interval: {hours_ago} > {last_checked}')
+                    return False
+
             except (TypeError, ValueError, KeyError):
                 data = {driver_name: []}
-
-            # If check is not allowed to happen, return now as to prevent
-            # another timestamp from being saved.
-            if not allowed:
-                return False
 
             # For future sake, only keep the last 50 checks.
             if len(data[driver_name]) > 50:
@@ -202,8 +208,10 @@ class DriverBase:
 
         filename = self.driver
 
-        if os.path.isfile(os.path.join(DEFAULT_DRIVER_ROOT, filename)):
-            return os.path.join(DEFAULT_DRIVER_ROOT, filename)
+        root_driver = os.path.join(DEFAULT_DRIVER_ROOT, filename)
+        if os.path.isfile(root_driver):
+            log.debug(f'webdriver binary: located at default {root_driver}')
+            return root_driver
 
         for root in ['bin/', '', 'setup/', 'setup/bin/']:
 
@@ -213,8 +221,10 @@ class DriverBase:
                 root_driver = os.path.join(root, filename)
 
             if os.path.isfile(root_driver):
+                log.debug(f'webdriver binary: located at {root_driver}')
                 return root_driver
 
+        log.critical('webdriver binary: not found anywhere')
         raise FileNotFoundError('browser driver not found')
 
     def quit(self, **kwargs):
@@ -243,7 +253,9 @@ class DriverBase:
 
     def get_driver_version(self):
         binary = self.binary_location()
-        return utils.binary_file_version(binary)
+        version = utils.binary_file_version(binary)
+        log.debug(f'DriverBase binary version: found {version}')
+        return version
 
 
 class ChromeDriver(DriverBase):
@@ -267,26 +279,32 @@ class ChromeDriver(DriverBase):
     def get_browser_version(self):
         capabilities = self.get_capabilities()
         try:
-            return capabilities['browserVersion'].split('.')[0]
+            version = capabilities['browserVersion'].split('.')[0]
         except (AttributeError, IndexError, KeyError, TypeError):
-            return utils.chrome_version()
+            version = utils.chrome_version()
+        log.debug(f'ChromeDriver browser version: found {version}')
+        return version
 
     def get_driver_version(self):
         try:
-            return super().get_driver_version()
+            version = super().get_driver_version()
         except FileNotFoundError:
             try:
                 capabilities = self.get_capabilities()
-                return capabilities['chrome']['chromedriverVersion'].split('.')[0]
+                version = capabilities['chrome']['chromedriverVersion'].split('.')[0]
             except (AttributeError, IndexError, KeyError, TypeError):
-                return
+                version = None
+        log.debug(f'ChromeDriver driver version: found {version}')
+        return version
 
     def check_driver_version(self):
         """ Check to ensure the local chromedriver being used is valid for the chrome installation. """
 
         if WEBDRIVER_IN_PATH:
+            log.debug('ChromeDriver version checks: not checking due to WEBDRIVER_IN_PATH=True')
             return
         if not requests:
+            log.debug('ChromeDriver version checks: not checking due to requests not being installed.')
             warnings.warn('requests not installed. Required to auto-download browser driver. "pip install requests"', ImportWarning)
             return
 
@@ -305,9 +323,13 @@ class ChromeDriver(DriverBase):
         except (AttributeError, IndexError):
             driver_version_major = None
 
+        log.debug(f'ChromeDriver version checks: majors: browser: {browser_version_major} driver: {driver_version_major}')
+
         majors_matching = None
         if browser_version_major and driver_version_major:
             majors_matching = browser_version_major == driver_version_major
+
+        log.debug(f'ChromeDriver version checks: majors match: {majors_matching}')
 
         # If we obtained the browsers version and the driver version matches,
         # we don't need to check anything more.
@@ -318,6 +340,7 @@ class ChromeDriver(DriverBase):
         if browser_version:
             url = f'{root_url}LATEST_RELEASE_{browser_version}'
 
+        log.debug(f'ChromeDriver version check: requesting {url}')
         self.latest_version = requests.get(url).text.strip()
 
         self.quit()
@@ -328,10 +351,14 @@ class ChromeDriver(DriverBase):
         except AttributeError:
             local_zip_file = zip_file_name
 
+        file_url = f'{root_url}{self.latest_version}/{zip_file_name}'
+        log.debug(f'ChromeDriver version check: downloading {file_url}')
+        log.debug(f'ChromeDriver version check: to {local_zip_file} extracting {self.driver}')
+
         download_and_extract_zip_file(
-            url=f'{root_url}{self.latest_version}/{zip_file_name}',
+            url=file_url,
             local_zip_file=local_zip_file,
-            extracting_file='chromedriver.exe'
+            extracting_file=self.driver
         )
 
 
@@ -359,30 +386,37 @@ class FirefoxDriver(DriverBase):
 
     def get_driver_version(self):
         try:
-            return super().get_driver_version()
+            version = super().get_driver_version()
         except FileNotFoundError:
             try:
                 capabilities = self.get_capabilities()
-                return capabilities['moz:geckodriverVersion'].split('.')[0]
+                version = capabilities['moz:geckodriverVersion'].split('.')[0]
             except (AttributeError, IndexError, KeyError, TypeError):
-                return
+                version = None
+        log.debug(f'FirefoxDriver driver version: found {version}')
+        return version
 
     def check_driver_version(self):
         """ Check to ensure the local geckodriver being used is valid for the firefox installation. """
 
         if WEBDRIVER_IN_PATH:
+            log.debug('FirefoxDriver version checks: not checking due to WEBDRIVER_IN_PATH=True')
             return
         if not requests:
+            log.debug('FirefoxDriver version checks: not checking due to requests not being installed.')
             warnings.warn('requests not installed. Required to auto-download browser driver. "pip install requests"', ImportWarning)
             return
 
         if not self.latest_version:
-            self.latest_version = requests.get('https://api.github.com/repos/mozilla/geckodriver/releases').json()[0]
+            url = 'https://api.github.com/repos/mozilla/geckodriver/releases'
+            log.debug(f'FirefoxDriver version check: requesting {url}')
+            self.latest_version = requests.get(url).json()[0]
 
         driver_version = self.get_driver_version()
 
         try:
             if self.latest_version['tag_name'].replace('v', '') == driver_version:
+                log.debug(f'FirefoxDriver version check: latest version already matches located driver {driver_version}')
                 return
         except (AttributeError, IndexError, KeyError, TypeError):
             pass
@@ -391,8 +425,10 @@ class FirefoxDriver(DriverBase):
         val_checker = f'win{BITNESS}' if IS_WINDOWS_OS else f'linux{BITNESS}'
         for dl in self.latest_version.get('assets', []):
             if dl.get('content_type') == 'application/zip' and val_checker in dl.get('browser_download_url', ''):
+                log.debug(f'FirefoxDriver version check: found latest version from url for {val_checker}')
                 break
         else:
+            log.debug(f'FirefoxDriver version check: failed to find latest version from url for {val_checker}')
             return
 
         self.quit()
@@ -403,8 +439,12 @@ class FirefoxDriver(DriverBase):
         except AttributeError:
             local_zip_file = zip_file_name
 
+        file_url = dl['browser_download_url']
+        log.debug(f'FirefoxDriver version check: downloading {file_url}')
+        log.debug(f'FirefoxDriver version check: to {local_zip_file} extracting {self.driver}')
+
         download_and_extract_zip_file(
-            url=dl['browser_download_url'],
+            url=file_url,
             local_zip_file=local_zip_file,
-            extracting_file='geckodriver.exe'
+            extracting_file=self.driver
         )

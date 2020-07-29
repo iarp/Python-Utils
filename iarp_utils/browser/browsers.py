@@ -1,5 +1,6 @@
 import os
 import datetime
+import logging
 from pathlib import Path
 import time
 
@@ -32,6 +33,9 @@ try:
 except:  # pragma: no cover
     settings = None
     DEFAULT_DRIVER = ChromeDriver
+
+
+log = logging.getLogger('iarp_utils.browser.browsers')
 
 
 class BrowserBase:
@@ -137,24 +141,33 @@ class BrowserBase:
     def _start_driver(self):
         # SessionNotCreatedException typically means mismatching browser and driver version
 
+        log.debug(f'browser selected driver: {self.selected_driver.__name__}')
+
         self.active_driver = self.selected_driver(**self.selected_driver_kwargs)
 
         try:
+            log.debug('browser starting driver')
             return self.active_driver.start()
         except SessionNotCreatedException:
+            log.critical('browser failed to start driver SessionNotCreatedException')
 
             # Only allow 1 browser version checker to be running at a time.
             with PIDFile('browser_version_checker') as good:
 
                 if not good:
+                    log.critical('browser failed to retry as another process is already checking')
                     raise PIDFile.Break
 
+                log.debug('browser force checking driver')
                 self.active_driver.check_driver_version()
+
+            log.debug('browser attempting to start driver again')
 
             # Attempt to restart the browser
             try:
                 return self.active_driver.start()
             except SessionNotCreatedException:
+                log.exception('browser failed to start driver again, stopping execution')
                 self.quit()
                 raise
 
@@ -211,6 +224,7 @@ class BrowserBase:
         :rtype WebElement
         """
         find_by, find_value = self.get_types(*args, **kwargs)
+        log.debug(f'browser get_element By.{find_by}, Value:{find_value}')
         return self.browser.find_element(by=find_by, value=find_value)
 
     def fill_input_element(self, value, *args, **kwargs):
