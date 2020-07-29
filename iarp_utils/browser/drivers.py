@@ -262,6 +262,13 @@ class ChromeDriver(DriverBase):
     driver = 'chromedriver.exe'
     webdriver = webdriver.Chrome
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        if self.headless and not self.user_agent:
+            self.user_agent = f'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 ' \
+                              f'(KHTML, like Gecko) Chrome/{utils.chrome_version()} Safari/537.36'
+
     def get_options(self):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.headless = self.headless

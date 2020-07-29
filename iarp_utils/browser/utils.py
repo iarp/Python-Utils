@@ -24,7 +24,7 @@ def chrome_version(browser_type=ChromeType.GOOGLE):
     Returns:
         str containing version of chrome
     """
-    pattern = r'\d+\.\d+\.\d+'
+    pattern = r'\d+\.\d+\.\d+\.\d+|\d+\.\d+\.\d+'
 
     cmd_mapping = {
         ChromeType.GOOGLE: {
