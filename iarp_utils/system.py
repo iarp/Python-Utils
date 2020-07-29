@@ -1,6 +1,8 @@
+import enum
 from pathlib import Path
 import os
 import subprocess
+import sys
 
 try:
     import psutil
@@ -56,3 +58,19 @@ def get_system_bitness():
     else:
         output = subprocess.check_output(['uname', '-m']).decode('utf8')
         return '64' if 'x86_64' in output else '32'
+
+
+class OSTypes(enum.Enum):
+    LINUX = "linux"
+    MAC = "mac"
+    WIN = "win"
+
+
+def os_name():
+    pl = sys.platform
+    if pl.startswith('linux'):
+        return OSTypes.LINUX
+    elif pl == "darwin":
+        return OSTypes.MAC
+    elif pl == "win32":
+        return OSTypes.WIN
