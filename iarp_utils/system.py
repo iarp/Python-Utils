@@ -6,7 +6,7 @@ import sys
 
 try:
     import psutil
-except ImportError:
+except ImportError:  # pragma: no cover
     psutil = None
 
 
@@ -24,7 +24,7 @@ def is_pid_still_running(pid_file, delete=True):
         bool if pid is running
     """
 
-    if not psutil:
+    if not psutil:  # pragma: no cover
         raise ImportError('psutil is required for this functionality. "pip install psutil"')
 
     pid_file = Path(pid_file)
@@ -65,12 +65,12 @@ class OSTypes(enum.Enum):
     MAC = "mac"
     WIN = "win"
 
-
-def os_name():
-    pl = sys.platform
-    if pl.startswith('linux'):
-        return OSTypes.LINUX
-    elif pl == "darwin":
-        return OSTypes.MAC
-    elif pl == "win32":
-        return OSTypes.WIN
+    @staticmethod
+    def active():
+        pl = sys.platform
+        if pl.startswith('linux'):
+            return OSTypes.LINUX
+        elif pl == "darwin":
+            return OSTypes.MAC
+        elif pl == "win32":
+            return OSTypes.WIN

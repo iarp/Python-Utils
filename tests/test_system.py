@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from iarp_utils.system import is_pid_still_running, get_system_bitness, os_name, OSTypes
+from iarp_utils.system import is_pid_still_running, get_system_bitness, OSTypes
 
 
 class SystemsTests(unittest.TestCase):
@@ -33,4 +33,4 @@ class SystemsTests(unittest.TestCase):
         self.assertIn(get_system_bitness(), ['32', '64'])
 
     def test_os_name_is_expected(self):
-        self.assertIn(os_name(), OSTypes)
+        self.assertIn(OSTypes.active(), OSTypes)

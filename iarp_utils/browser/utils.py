@@ -1,9 +1,7 @@
 import re
 import subprocess
-import sys
-import os
 
-from ..system import OSTypes, os_name
+from ..system import OSTypes
 
 
 class ChromeType(object):
@@ -41,7 +39,7 @@ def chrome_version(browser_type=ChromeType.GOOGLE):
         }
     }
 
-    cmds = cmd_mapping[browser_type][os_name()]
+    cmds = cmd_mapping[browser_type][OSTypes.active()]
     return _process_version_commands('Google Chrome', cmds)
 
 
@@ -62,14 +60,14 @@ def firefox_version():
         ]
     }
 
-    cmds = cmd_mapping.get(os_name())
+    cmds = cmd_mapping.get(OSTypes.active())
     return _process_version_commands('Chrome', cmds)
 
 
 def _process_version_commands(name, cmds, pattern=r'\d+\.\d+\.\d+\.\d+|\d+\.\d+\.\d+'):
 
     if not cmds:
-        raise ValueError(f'No command found for {name} version with os {os_name()}')
+        raise ValueError(f'No command found for {name} version with os {OSTypes.active()}')
 
     if isinstance(cmds, str):
         cmds = [cmds]
