@@ -1,3 +1,4 @@
+import base64
 import ipaddress
 import random
 import requests
@@ -7,15 +8,21 @@ from .strings import startswith_many
 
 def get_wan_ip_from_linksys_router(router_ip_address='192.168.1.1',
                                    allow_returning_private_ip_ranges=False,
-                                   private_ip_ranges: list = None):
+                                   private_ip_ranges: list = None,
+                                   auth_username=None, auth_password=None):
     """ Obtains the WAN IP Address from a linksys
         based router that supports JNAP.
+
+        Authentication is typically NOT required for GetWANStatus command we are using.
+        It is included as params just in case.
 
     Args:
         router_ip_address: IP Address of the router to query from.
         allow_returning_private_ip_ranges: If the IP address returned falls
             into the private_ip_ranges, do you still want the value returned?
         private_ip_ranges: A list of private ip ranges. Standard ip.startswith matching.
+        auth_username: Username to login to the router with
+        auth_password: Password required for the user supplied
 
         private_ip_ranges = ['169.254.', '192.168.', '10.', '172.', '127.']
 
@@ -29,10 +36,13 @@ def get_wan_ip_from_linksys_router(router_ip_address='192.168.1.1',
         "Content-Type": "application/json; charset=UTF-8",
         "Accept": "application/json",
         "X-JNAP-Action": "http://cisco.com/jnap/router/GetWANStatus",
-
-        # Auth is not needed for GetWANStatus, leaving for knowledge sake.
-        # "X-JNAP-Authorization":"Basic " + base64.b64encode('admin:adminpasswordhere'.encode('utf8')).decode('utf8')
     }
+
+    if auth_username and auth_password:
+        # Auth is not needed for GetWANStatus, leaving for knowledge sake.
+        auth_combined = f'{auth_username}:{auth_password}'
+        auth_password = base64.b64encode(auth_combined.encode('utf8')).decode('utf8')
+        headers["X-JNAP-Authorization"] = f"Basic {auth_password}"
 
     if not router_ip_address.startswith('http'):
         router_ip_address = f'http://{router_ip_address}'
