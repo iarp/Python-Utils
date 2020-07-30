@@ -37,14 +37,14 @@ class DriverBaseTests(unittest.TestCase):
     def test_check_version_allowed_recent_entry(self, mock_file):
         self.assertFalse(self.driver._check_driver_version_allowed())
 
-    @patch("builtins.open", new_callable=mock_open, read_data=f'{{"DriverBase": ["{(datetime.datetime.now() - datetime.timedelta(hours=23)).isoformat()}"]}}')
+    @patch("builtins.open", new_callable=mock_open, read_data=f'{{"DriverBase": ["{(datetime.datetime.now() - datetime.timedelta(hours=7*23)).isoformat()}"]}}')
     def test_check_version_allowed_older_entry(self, mock_file):
         self.assertFalse(self.driver._check_driver_version_allowed())
 
-    @patch("builtins.open", new_callable=mock_open, read_data=f'{{"DriverBase": ["{(datetime.datetime.now() - datetime.timedelta(hours=24)).isoformat()}"]}}')
+    @patch("builtins.open", new_callable=mock_open, read_data=f'{{"DriverBase": ["{(datetime.datetime.now() - datetime.timedelta(hours=7*24)).isoformat()}"]}}')
     def test_check_version_allowed_old_entry(self, mock_file):
         self.assertTrue(self.driver._check_driver_version_allowed())
 
-    @patch("builtins.open", new_callable=mock_open, read_data=f'{{"DriverBase": ["{(datetime.datetime.now() - datetime.timedelta(hours=25)).isoformat()}"]}}')
+    @patch("builtins.open", new_callable=mock_open, read_data=f'{{"DriverBase": ["{(datetime.datetime.now() - datetime.timedelta(hours=7*25)).isoformat()}"]}}')
     def test_check_version_allowed_very_old_entry(self, mock_file):
         self.assertTrue(self.driver._check_driver_version_allowed())
