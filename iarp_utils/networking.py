@@ -105,6 +105,12 @@ def get_wan_ip_from_external_sites(sites: list = None, shuffler=random.shuffle, 
     if callable(shuffler):
         possible_returned_values = shuffler(sites)
 
+        if shuffler is not random.shuffle:
+            if not possible_returned_values:
+                raise ValueError('Supplied shuffler did not return data')
+            if not isinstance(possible_returned_values, (list, tuple, set)):
+                raise ValueError('Supplied shuffler did not return a list, tuple, or set value.')
+
         # If the shuffler function the user supplied returned its values, use those.
         if possible_returned_values and isinstance(possible_returned_values, (list, tuple, set)):
             sites = possible_returned_values
