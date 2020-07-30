@@ -2,3 +2,4 @@
 omit =
     tests/*
     iarp_utils/datetimes.py
+    iarp_utils/browser/*

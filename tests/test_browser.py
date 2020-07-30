@@ -48,3 +48,14 @@ class DriverBaseTests(unittest.TestCase):
     @patch("builtins.open", new_callable=mock_open, read_data=f'{{"DriverBase": ["{(datetime.datetime.now() - datetime.timedelta(hours=7*25)).isoformat()}"]}}')
     def test_check_version_allowed_very_old_entry(self, mock_file):
         self.assertTrue(self.driver._check_driver_version_allowed())
+
+    def test_webdriver_base_raises_notimplementederror(self):
+        with self.assertRaises(NotImplementedError):
+            tmp = self.driver.webdriver
+
+    def test_driver_base_raises_notimplementederror(self):
+        with self.assertRaises(NotImplementedError):
+            tmp = self.driver.driver
+
+    def test_driver_webbrowser_is_none_by_default(self):
+        self.assertIsNone(self.driver.browser)
