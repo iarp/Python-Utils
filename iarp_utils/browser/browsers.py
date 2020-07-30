@@ -127,6 +127,34 @@ class BrowserBase:
         if self._execute_initialize:
             self.initialize()
 
+    def change_headless_state(self):
+        """ Swaps the current session to/from headless state.
+
+        cookies are only copied for the currently loaded domain.
+        """
+        cookies = self.browser.get_cookies()
+        current_url = self.browser.current_url
+
+        is_currently_headless = self.selected_driver_kwargs.get('headless')
+        current_user_agent = self.selected_driver_kwargs.get('user_agent')
+
+        # If the current driver is NOT headless, copy the current user agent.
+        # Many sites require it to match with cookies for security reasons.
+        if not is_currently_headless:
+            current_user_agent = self.browser.execute_script("return navigator.userAgent;")
+
+        self.quit()
+        self.selected_driver_kwargs['headless'] = not is_currently_headless  # flip/flop setting
+        self.selected_driver_kwargs['user_agent'] = current_user_agent
+        self.start_browser()
+        self.load_url(current_url)
+        self.browser.delete_all_cookies()
+        for cookie in cookies:
+            print(cookie)
+            self.browser.add_cookie(cookie)
+        time.sleep(2)
+        self.load_url(current_url)
+
     @property
     def download_directory(self):
         try:
@@ -139,7 +167,6 @@ class BrowserBase:
         return self.download_directory
 
     def _start_driver(self):
-        # SessionNotCreatedException typically means mismatching browser and driver version
 
         log.debug(f'browser selected driver: {self.selected_driver.__name__}')
 
@@ -149,6 +176,7 @@ class BrowserBase:
             log.debug('browser starting driver')
             return self.active_driver.start()
         except SessionNotCreatedException:
+            # SessionNotCreatedException typically means mismatching browser and driver version
             log.critical('browser failed to start driver SessionNotCreatedException')
 
             # Only allow 1 browser version checker to be running at a time.
