@@ -1,8 +1,10 @@
 import base64
 import ipaddress
+from json.decoder import JSONDecodeError
 import os
 import random
 import requests
+from requests.exceptions import ConnectionError, HTTPError
 
 from . import configuration
 from .strings import startswith_many
@@ -81,8 +83,15 @@ def get_wan_ip_from_linksys_router(router_ip_address='192.168.1.1',
         pass
 
 
+def is_valid_ip(address):
+    try:
+        return ipaddress.ip_address(address)
+    except ValueError:
+        return False
+
+
 def get_wan_ip_from_external_sites(sites: list = None, shuffler=random.shuffle, possible_json_keys=None,
-                                   json_file='wan_ip_sites.json'):
+                                   json_file='wan_ip_sites.json', valid_ip_func=is_valid_ip):
     """ Obtains your WAN IP Address from websites that publish it.
 
     sites can also be stored in a json file with the following format,
@@ -130,28 +139,31 @@ def get_wan_ip_from_external_sites(sites: list = None, shuffler=random.shuffle, 
     if not isinstance(sites, (list, tuple, set)):
         raise ValueError('sites must by of type list, tuple, or set.')
 
-    for s in sites:
+    for url in sites:
+
         try:
-            r = requests.get(s)
+            r = requests.get(url)
             r.raise_for_status()
+        except (HTTPError, ConnectionError):
+            continue
 
-            try:
-                # See if the raw response text is an IP, this will avoid potentially
-                # hitting multiple sites and failing the json key matching below.
-                ipaddress.ip_address(r.text)
-                return r.text
-            except (ValueError, AttributeError):
-                pass
+        if r.status_code != 200:
+            continue
 
+        # See if the raw response text is an IP, this will avoid potentially
+        # hitting multiple sites and failing the json key matching below.
+        if valid_ip_func(r.text):
+            return r.text
+
+        try:
             data = r.json()
+        except JSONDecodeError:
+            continue
 
-            for k in possible_json_keys:
-                try:
-                    val = data[k]
-                    ipaddress.ip_address(val)
-                    return val
-                except (ValueError, KeyError, TypeError):
-                    pass  # pragma: no cover
+        if not isinstance(data, dict):
+            continue
 
-        except requests.exceptions.HTTPError:
-            pass
+        for k in possible_json_keys:
+            val = data.get(k)
+            if valid_ip_func(val):
+                return val
