@@ -1,8 +1,10 @@
 import base64
 import ipaddress
+import os
 import random
 import requests
 
+from . import configuration
 from .strings import startswith_many
 
 
@@ -79,19 +81,34 @@ def get_wan_ip_from_linksys_router(router_ip_address='192.168.1.1',
         pass
 
 
-def get_wan_ip_from_external_sites(sites: list = None, shuffler=random.shuffle, possible_json_keys=None):
+def get_wan_ip_from_external_sites(sites: list = None, shuffler=random.shuffle, possible_json_keys=None,
+                                   json_file='wan_ip_sites.json'):
     """ Obtains your WAN IP Address from websites that publish it.
+
+    sites can also be stored in a json file with the following format,
+    supply json_file with the filepath.
+
+    {
+        'sites': ['https://www.site1.com/wan-ip',],
+        'json_keys': ['ip', 'ipaddress']
+    }
 
     Args:
         sites: list containing websites to use, must return json {'ip': '...'} or raw text IP.
         shuffler: the shuffler to use on the sites list so that no one site always gets used
         possible_json_keys: if the website returns a json value, what key gets the value.
+        json_file: Filepath to json file containing sites to poll wan ip from
 
     Returns:
         String with the IP address if valid, returns None otherwise.
     """
     if not possible_json_keys or not isinstance(possible_json_keys, (list, tuple, set)):
         possible_json_keys = ['ip', 'ipAddress']
+
+    if not sites and os.path.isfile(json_file):
+        config = configuration.load(json_file)
+        sites = config.get('sites', [])
+        possible_json_keys.extend(config.get('json_keys', []))
 
     if not sites:
         sites = [

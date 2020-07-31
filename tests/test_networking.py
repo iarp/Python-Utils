@@ -1,8 +1,9 @@
 import unittest
 import os
 import responses
+import json
 import requests.exceptions
-from mock import patch, Mock
+from mock import patch, Mock, mock_open
 
 from iarp_utils import networking
 
@@ -158,6 +159,14 @@ class NetworkingTests(unittest.TestCase):
         self.assertIsNone(val)
 
     @patch('iarp_utils.networking.requests.get')
+    def test_get_wan_ip_from_external_sites_matching_custom_keys(self, mock_get):
+        mock_get.return_value = Mock(ok=True)
+        mock_get.return_value.json.return_value = {'WanIP': '1.1.1.1'}
+
+        val = networking.get_wan_ip_from_external_sites(possible_json_keys=['WanIP'])
+        self.assertEqual('1.1.1.1', val)
+
+    @patch('iarp_utils.networking.requests.get')
     def test_get_wan_ip_from_external_sites_raw_text_has_ip(self, mock_get):
         mock_get.return_value.text = '1.1.1.1'
 
@@ -173,3 +182,27 @@ class NetworkingTests(unittest.TestCase):
 
         val = networking.get_wan_ip_from_external_sites(shuffler=shuffler)
         self.assertEqual('1.1.1.1', val)
+
+    def test_get_wan_ip_from_external_sites_custom_shuffler_returns_invalid_iterable(self):
+
+        def shuffler(objs):
+            class Test:
+                pass
+            return Test()
+
+        with self.assertRaises(ValueError):
+            networking.get_wan_ip_from_external_sites(shuffler=shuffler)
+
+    @responses.activate
+    @patch('os.path.isfile')
+    def test_get_wan_ip_from_external_sites_with_sites_in_json_file(self, mock_isopen):
+        mock_isopen.return_value = True
+        url = 'https://www.example.com/'
+        responses.add(responses.GET, url, '1.1.1.1')
+
+        data = json.dumps({'sites': [url, ]})
+        with patch('builtins.open', mock_open(read_data=data)) as m:
+            val = networking.get_wan_ip_from_external_sites()
+            self.assertEqual('1.1.1.1', val)
+
+        self.assertEqual(url, responses.calls[0].request.url)
