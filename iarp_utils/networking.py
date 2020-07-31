@@ -105,21 +105,27 @@ def get_wan_ip_from_external_sites(sites: list = None, shuffler=random.shuffle, 
     if callable(shuffler):
         possible_returned_values = shuffler(sites)
 
-        if shuffler is not random.shuffle:
-            if not possible_returned_values:
-                raise ValueError('Supplied shuffler did not return data')
-            if not isinstance(possible_returned_values, (list, tuple, set)):
-                raise ValueError('Supplied shuffler did not return a list, tuple, or set value.')
-
-        # If the shuffler function the user supplied returned its values, use those.
-        if possible_returned_values and isinstance(possible_returned_values, (list, tuple, set)):
+        if possible_returned_values:
+            # If the shuffler function the user supplied returned its values, use those.
+            # Otherwise the users shuffler should've done in-place shuffling.
             sites = possible_returned_values
 
-    r = None
+    if not isinstance(sites, (list, tuple, set)):
+        raise ValueError('sites must by of type list, tuple, or set.')
+
     for s in sites:
         try:
             r = requests.get(s)
             r.raise_for_status()
+
+            try:
+                # See if the raw response text is an IP, this will avoid potentially
+                # hitting multiple sites and failing the json key matching below.
+                ipaddress.ip_address(r.text)
+                return r.text
+            except (ValueError, AttributeError):
+                pass
+
             data = r.json()
 
             for k in possible_json_keys:
@@ -129,12 +135,6 @@ def get_wan_ip_from_external_sites(sites: list = None, shuffler=random.shuffle, 
                     return val
                 except (ValueError, KeyError, TypeError):
                     pass  # pragma: no cover
-        except:
-            continue
 
-    if r:
-        try:
-            ipaddress.ip_address(r.text)
-            return r.text
-        except (ValueError, AttributeError):
+        except requests.exceptions.HTTPError:
             pass

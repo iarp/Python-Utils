@@ -173,19 +173,3 @@ class NetworkingTests(unittest.TestCase):
 
         val = networking.get_wan_ip_from_external_sites(shuffler=shuffler)
         self.assertEqual('1.1.1.1', val)
-
-    def test_get_wan_ip_from_external_sites_custom_shuffler_returns_blank_iterable(self):
-
-        def shuffler(objs):
-            return []
-
-        with self.assertRaises(ValueError):
-            networking.get_wan_ip_from_external_sites(shuffler=shuffler)
-
-    def test_get_wan_ip_from_external_sites_custom_shuffler_returns_blank_string(self):
-
-        def shuffler(objs):
-            return ''
-
-        with self.assertRaises(ValueError):
-            networking.get_wan_ip_from_external_sites(shuffler=shuffler)
