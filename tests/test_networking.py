@@ -134,6 +134,7 @@ class NetworkingTests(unittest.TestCase):
     @patch('iarp_utils.networking.requests.get')
     def test_get_wan_ip_from_external_sites(self, mock_get):
         mock_get.return_value = Mock(ok=True)
+        mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = {
             'ip': '1.1.1.1',
         }
@@ -161,6 +162,7 @@ class NetworkingTests(unittest.TestCase):
     @patch('iarp_utils.networking.requests.get')
     def test_get_wan_ip_from_external_sites_matching_custom_keys(self, mock_get):
         mock_get.return_value = Mock(ok=True)
+        mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = {'WanIP': '1.1.1.1'}
 
         val = networking.get_wan_ip_from_external_sites(possible_json_keys=['WanIP'])
@@ -169,6 +171,7 @@ class NetworkingTests(unittest.TestCase):
     @patch('iarp_utils.networking.requests.get')
     def test_get_wan_ip_from_external_sites_raw_text_has_ip(self, mock_get):
         mock_get.return_value.text = '1.1.1.1'
+        mock_get.return_value.status_code = 200
 
         val = networking.get_wan_ip_from_external_sites()
         self.assertEqual('1.1.1.1', val)
@@ -176,6 +179,7 @@ class NetworkingTests(unittest.TestCase):
     @patch('iarp_utils.networking.requests.get')
     def test_get_wan_ip_from_external_sites_custom_shuffler(self, mock_get):
         mock_get.return_value.text = '1.1.1.1'
+        mock_get.return_value.status_code = 200
 
         def shuffler(objs):
             return objs
