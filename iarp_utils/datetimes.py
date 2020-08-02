@@ -9,7 +9,8 @@
     The above methods can be removed once 3.6 sunsets in
     favor of datetime.datetime.fromisoformat(...)
 """
-from datetime import timezone, timedelta, datetime, date
+from datetime import timezone, timedelta, datetime
+import sys
 
 
 # Helpers for parsing the result of isoformat()
@@ -112,13 +113,12 @@ def _parse_isoformat_time(tstr):
 
 def fromisoformat(date_string):
     """Construct a datetime from the output of datetime.isoformat()."""
+
+    if sys.version_info >= (3, 7, 0):
+        return datetime.fromisoformat(date_string)
+
     if not isinstance(date_string, str):
         raise TypeError('fromisoformat: argument must be str')
-
-    try:
-        datetime.fromisoformat(date_string)
-    except AttributeError:
-        pass
 
     # Split this at the separator
     dstr = date_string[0:10]
