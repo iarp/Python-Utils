@@ -1,11 +1,12 @@
-import binascii
-import os
-import json
-import sys
-import datetime
 import base64
+import binascii
 import copy
+import datetime
+import json
+import os
+import sys
 import warnings
+
 from .datetimes import fromisoformat
 
 
@@ -257,7 +258,8 @@ def load(file_location='config.json', use_relative_path=False, resave_on_load=Tr
     return config
 
 
-def save(config: dict, file_location='config.json', use_relative_path=False, encode_passwords=True, keys_to_encode=None):
+def save(config: dict, file_location='config.json', use_relative_path=False,
+         encode_passwords=True, keys_to_encode=None):
     """ Saves the configuration ini file.
 
     Examples:"

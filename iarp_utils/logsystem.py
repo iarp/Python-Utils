@@ -70,7 +70,8 @@ class LogSystem:
 
     def setup_logs(self, logger_name, write_mode='a', write_to_console=True, write_to_file=True,
                    file_formatter='%(asctime)s - %(levelname)s - %(message)s',
-                   console_formatter='%(name)s - %(asctime)s - %(levelname)s - %(message)s', level=None, propagate=None):
+                   console_formatter='%(name)s - %(asctime)s - %(levelname)s - %(message)s',
+                   level=None, propagate=None):
         """ Returns a logger object that will log to the logger_name.log filename given.
 
         Args:
@@ -103,7 +104,9 @@ class LogSystem:
 
             file_handler = logging.FileHandler(log_file, mode='w')
             if write_mode.lower() in ['a', 'append']:
-                file_handler = logging.handlers.RotatingFileHandler(log_file, mode='a', maxBytes=10485760, backupCount=3)
+                file_handler = logging.handlers.RotatingFileHandler(
+                    log_file, mode='a', maxBytes=10485760, backupCount=3
+                )
 
             file_formatter = logging.Formatter(file_formatter)
             file_handler.setFormatter(file_formatter)

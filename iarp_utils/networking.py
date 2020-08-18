@@ -1,9 +1,9 @@
 import base64
 import ipaddress
-from json.decoder import JSONDecodeError
 import os
 import random
 import requests
+from json.decoder import JSONDecodeError
 from requests.exceptions import ConnectionError, HTTPError
 
 from . import configuration
@@ -76,11 +76,8 @@ def get_wan_ip_from_linksys_router(router_ip_address='192.168.1.1',
     if startswith_many(ip, private_ip_ranges) and not allow_returning_private_ip_ranges:
         return
 
-    try:
-        ipaddress.ip_address(ip)
+    if is_valid_ip(ip):
         return ip
-    except:
-        pass
 
 
 def is_valid_ip(address):

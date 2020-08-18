@@ -1,2 +1,2 @@
-from .browsers import BrowserBase, ChromeBrowser, FirefoxBrowser
-from .drivers import DriverBase, ChromeDriver, FirefoxDriver
+from .browsers import BrowserBase, ChromeBrowser, FirefoxBrowser  # noqa
+from .drivers import ChromeDriver, DriverBase, FirefoxDriver  # noqa

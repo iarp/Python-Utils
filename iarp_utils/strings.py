@@ -45,7 +45,7 @@ def _replace_values(text: str, find: str, replace_withs: list):
         if isinstance(v, list):
             text = _replace_values(text, find, v)
         else:
-            orig_text = text
+            # orig_text = text
             text = text.replace(v, find)
 
             # Only process 1 replacement within the list, if the orig_text doesn't match,

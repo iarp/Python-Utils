@@ -1,4 +1,4 @@
-from .pidfile import PIDFile
-from .benchmarks import Benchmark, Profiler
-from .configuration import load as config_load, save as config_save
-from .dicts import DefaultOrderedDict, NotifyDict
+from .benchmarks import Benchmark, Profiler  # noqa
+from .configuration import load as config_load, save as config_save  # noqa
+from .dicts import DefaultOrderedDict, NotifyDict  # noqa
+from .pidfile import PIDFile  # noqa

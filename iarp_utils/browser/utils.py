@@ -76,7 +76,7 @@ def _process_version_commands(name, cmds, pattern=r'\d+\.\d+\.\d+\.\d+|\d+\.\d+\
         try:
             stdout = subprocess.check_output(cmd)
             break
-        except:
+        except: # noqa
             pass
     else:
         raise ValueError(f'Could not get version for {name} with this command: {cmds}')

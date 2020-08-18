@@ -2,6 +2,7 @@ import os
 
 from . import system
 
+
 try:
     from django.conf import settings
 except ImportError:
@@ -47,7 +48,7 @@ class PIDFile(object):
                 try:
                     folder = getattr(settings, attr)
                     break
-                except:
+                except: # noqa
                     continue
 
         self.folder = folder or ''
@@ -94,7 +95,7 @@ class PIDFile(object):
             # of the current browser screen.
             try:
                 self.browser.save_screenshot(filename_prefix=f'{self.pid_file_name}_')
-            except:
+            except: # noqa
                 pass
 
         if self.file_obj:

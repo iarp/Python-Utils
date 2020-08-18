@@ -6,15 +6,22 @@ import shutil
 import tempfile
 import warnings
 
-from . import utils
 from ..datetimes import fromisoformat
 from ..exceptions import ImproperlyConfigured
-from ..files import download_file, extract_zip_single_file, get_mime_types_as_str
-from ..system import get_system_bitness, IS_WINDOWS_OS
+from ..files import (
+    download_file,
+    extract_zip_single_file,
+    get_mime_types_as_str,
+)
+from ..system import IS_WINDOWS_OS, get_system_bitness
+from . import utils
+
 
 try:
     from selenium import webdriver
-    from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
+    from selenium.webdriver.remote.webdriver import (
+        WebDriver as RemoteWebDriver,
+    )
 except ImportError:
     webdriver = None
 
@@ -36,7 +43,7 @@ try:
     CHECK_DRIVER_VERSION = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION', True)
     CHECK_DRIVER_VERSION_INTERVAL = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION_INTERVAL', 7 * 24)
     USER_AGENT = getattr(settings, 'BROWSER_USER_AGENT', None)
-except:
+except: # noqa
     settings = None
     DEFAULT_DRIVER_ROOT = 'bin/'
     WEBDRIVER_IN_PATH = False
@@ -232,7 +239,7 @@ class DriverBase:
         self.delete_download_directory(**kwargs)
         try:
             self._browser.quit()
-        except:
+        except: # noqa
             pass
 
     @property
@@ -312,7 +319,8 @@ class ChromeDriver(DriverBase):
             return
         if not requests:
             log.debug('ChromeDriver version checks: not checking due to requests not being installed.')
-            warnings.warn('requests not installed. Required to auto-download browser driver. "pip install requests"', ImportWarning)
+            warnings.warn('requests not installed. Required to auto-download browser driver. "pip install requests"',
+                          ImportWarning)
             return
 
         root_url = 'https://chromedriver.storage.googleapis.com/'
@@ -330,7 +338,8 @@ class ChromeDriver(DriverBase):
         except (AttributeError, IndexError):
             driver_version_major = None
 
-        log.debug(f'ChromeDriver version checks: majors: browser: {browser_version_major} driver: {driver_version_major}')
+        log.debug(f'ChromeDriver version checks: majors: browser: '
+                  f'{browser_version_major} driver: {driver_version_major}')
 
         majors_matching = None
         if browser_version_major and driver_version_major:
@@ -411,7 +420,8 @@ class FirefoxDriver(DriverBase):
             return
         if not requests:
             log.debug('FirefoxDriver version checks: not checking due to requests not being installed.')
-            warnings.warn('requests not installed. Required to auto-download browser driver. "pip install requests"', ImportWarning)
+            warnings.warn('requests not installed. Required to auto-download browser driver. "pip install requests"',
+                          ImportWarning)
             return
 
         if not self.latest_version:
@@ -423,7 +433,8 @@ class FirefoxDriver(DriverBase):
 
         try:
             if self.latest_version['tag_name'].replace('v', '') == driver_version:
-                log.debug(f'FirefoxDriver version check: latest version already matches located driver {driver_version}')
+                log.debug(f'FirefoxDriver version check: latest version '
+                          f'already matches located driver {driver_version}')
                 return
         except (AttributeError, IndexError, KeyError, TypeError):
             pass

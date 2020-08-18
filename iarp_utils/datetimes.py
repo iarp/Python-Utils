@@ -9,8 +9,8 @@
     The above methods can be removed once 3.6 sunsets in
     favor of datetime.datetime.fromisoformat(...)
 """
-from datetime import timezone, timedelta, datetime
 import sys
+from datetime import datetime, timedelta, timezone
 
 
 # Helpers for parsing the result of isoformat()

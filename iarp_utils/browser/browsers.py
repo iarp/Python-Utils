@@ -1,27 +1,29 @@
-import os
 import datetime
 import logging
-from pathlib import Path
+import os
 import time
+from pathlib import Path
 
-from .drivers import ChromeDriver, DriverBase, FirefoxDriver
-from .exceptions import LoginFailureException
 from ..exceptions import ImproperlyConfigured
 from ..pidfile import PIDFile
+from .drivers import ChromeDriver, DriverBase, FirefoxDriver
+from .exceptions import LoginFailureException
+
 
 try:
-    from selenium.webdriver.common.keys import Keys
-    from selenium.webdriver.support.ui import Select, WebDriverWait
-    from selenium.webdriver.support import expected_conditions
     from selenium.common.exceptions import (
-        TimeoutException, NoSuchElementException,
-        NoAlertPresentException, SessionNotCreatedException
+        NoSuchElementException,
+        SessionNotCreatedException,
     )
-    from selenium.webdriver.common.by import By
     from selenium.webdriver.common.action_chains import ActionChains
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.common.keys import Keys
     from selenium.webdriver.remote.webdriver import WebDriver
+    from selenium.webdriver.support import expected_conditions
+    from selenium.webdriver.support.ui import Select, WebDriverWait
 except ImportError:  # pragma: no cover
     WebDriver = None
+
     class By:
         NAME = None
         ID = None
@@ -30,7 +32,7 @@ try:
     from django.conf import settings
 
     DEFAULT_DRIVER = getattr(settings, 'BROWSER_DEFAULT_DRIVER', ChromeDriver)
-except:  # pragma: no cover
+except:  # noqa
     settings = None
     DEFAULT_DRIVER = ChromeDriver
 
@@ -430,7 +432,7 @@ class BrowserBase:
                 try:
                     save_dir = os.path.join(getattr(settings, attr), 'browser_screenshots')
                     break
-                except:
+                except: # noqa
                     pass
 
         save_dir = Path(os.path.join(save_dir or '', sub_folder))

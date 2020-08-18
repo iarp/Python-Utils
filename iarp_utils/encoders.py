@@ -4,13 +4,14 @@
 
     It still works so I figured I would include it here.
 """
-import textwrap
-import json
 import base64
-import random
+import json
 import math
+import random
+import textwrap
 
 from .strings import random_character_generator
+
 
 __GARBAGE_SPLITTER__ = '|----|'
 

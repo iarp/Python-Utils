@@ -1,8 +1,7 @@
-import os
 import sqlite3
-import warnings
 
 from .exceptions import ImproperlyConfigured
+
 
 try:
     import pyodbc

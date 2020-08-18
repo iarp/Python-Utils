@@ -1,5 +1,5 @@
-import timeit
 import cProfile
+import timeit
 
 
 class Benchmark:

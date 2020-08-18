@@ -1,5 +1,5 @@
-from collections import OrderedDict
 import datetime
+from collections import OrderedDict
 
 
 def dropdown_timerange(inc_in_minutes=15):
