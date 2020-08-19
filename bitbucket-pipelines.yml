@@ -5,16 +5,16 @@ pipelines:
         name: Python 3.7
         script:
           - pip install -r requirements-dev.txt
-          - tox
+          - python setup.py test
     - step:
         image: python:3.6.11
         name: Python 3.6
         script:
           - pip install -r requirements-dev.txt
-          - tox
+          - python setup.py test
     - step:
         image: python:3.8.5
         name: Python 3.8
         script:
           - pip install -r requirements-dev.txt
-          - tox
+          - python setup.py test
