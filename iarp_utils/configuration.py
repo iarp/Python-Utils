@@ -1,6 +1,7 @@
 import base64
 import binascii
 import copy
+import configparser as cfgp
 import datetime
 import json
 import os
@@ -309,3 +310,129 @@ def save(config: dict, file_location='config.json', use_relative_path=False,
 
     with open(file_location, 'w', encoding='utf8') as fw:
         fw.write(dumped_data)
+
+
+def load_ini(file_name='setup/config.ini', lower_all_keys=False, encoded_passwords=True):
+    """
+    Loads configuration ini files.
+    """
+    config = {}
+    needs_saving = False
+
+    cp = cfgp.ConfigParser()
+    cp.optionxform = str
+
+    # file_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    file_path = os.path.dirname(os.path.realpath(__file__))
+    file_location = os.path.join(file_path, file_name)
+    cp.read(file_location)
+    for original_section in cp.sections():
+
+        sec = original_section
+        if lower_all_keys:
+            sec = sec.lower()
+
+        if sec not in config:
+            config[sec] = {}
+
+        for original_option in cp.options(original_section):
+            opt = original_option
+
+            if lower_all_keys:
+                opt = opt.lower()
+
+            if opt not in config[sec]:
+                config[sec][opt] = {}
+            try:
+                data = cp.get(original_section, original_option)
+            except cfgp.InterpolationSyntaxError:
+                data = 'Failed To Load, InterpolationSyntaxError! % must be escaped by another %'
+
+            if data.lower() == 'true':
+                data = True
+            elif data.lower() == 'false':
+                data = False
+
+            if isinstance(data, str):
+                try:
+                    data = json.loads(data)
+                except (ValueError, TypeError):
+                    pass
+
+            if isinstance(data, str):
+                # Attempt to load a datetime stamp
+                try:
+                    data = datetime.datetime.strptime(data, '%Y-%m-%d')
+                except ValueError:
+                    try:
+                        data = datetime.datetime.strptime(data, '%Y-%m-%d %H:%M:%S')
+                    except ValueError:
+                        pass
+
+            if encoded_passwords and opt.lower() == 'password':
+                try:
+                    data = base64.b64decode(data).decode('utf-8')
+                except (UnicodeDecodeError, UnicodeEncodeError, binascii.Error):
+                    needs_saving = True
+
+            config[sec][opt] = data
+
+    if needs_saving:
+        save_ini(
+            config=config,
+            file_location=file_name,
+            encode_passwords=encoded_passwords
+        )
+
+    return config
+
+
+def save_ini(config, file_location='setup/config.ini', encode_passwords=True):
+    """
+    Saves the configuration ini file.
+    """
+
+    cp = cfgp.ConfigParser()
+    cp.optionxform = str
+    for folder_name in config:
+        cp.add_section(folder_name)
+        for field in config[folder_name]:
+            field_value = config[folder_name][field]
+
+            if isinstance(field_value, (dict, list)):
+                try:
+                    field_value = json.dumps(field_value)
+                except ValueError:
+                    pass
+            elif isinstance(field_value, datetime.date):
+                field_value = field_value.strftime('%Y-%m-%d')
+            elif isinstance(field_value, datetime.datetime):
+                field_value = field_value.strftime('%Y-%m-%d %H:%M:%S')
+            elif isinstance(field_value, int):
+                field_value = str(field_value)
+            elif field_value is True:
+                field_value = 'True'
+            elif field_value is False:
+                field_value = 'False'
+
+            if isinstance(field, int):
+                field = str(field)
+
+            if isinstance(field_value, str) and '%' in field_value:
+                field_value = field_value.replace('%', '%%')
+
+            if encode_passwords and field.lower() == 'password':
+                try:
+                    field_value = base64.b64encode(field_value.encode('utf-8')).decode('utf-8')
+                except (UnicodeEncodeError, UnicodeDecodeError):
+                    pass
+
+            cp.set(folder_name, field, field_value)
+
+    file_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    file_location = os.path.join(file_path, file_location)
+
+    with open(file_location, 'w') as cfg:
+        cp.write(cfg)
+
+    return config
