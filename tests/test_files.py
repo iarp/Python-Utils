@@ -53,3 +53,10 @@ class FilesTests(unittest.TestCase):
         self.assertIn('text/css', get_mime_types_as_str())
         self.assertIn('application/zip', get_mime_types_as_str())
         self.assertIn('application/json', get_mime_types_as_str())
+
+    def test_mime_types_has_excel_types(self):
+        # Is this french or spelling mistake on websites behalf?
+        self.assertIn('application/vnd.openxmlformates-officedocument.spreadsheetml.sheet', MIME_TYPES_LIST)
+        self.assertIn('application/vnd.spreadsheet-openxml', MIME_TYPES_LIST)
+        self.assertIn('application/xls', MIME_TYPES_LIST)
+        self.assertIn('application/xlsx', MIME_TYPES_LIST)
