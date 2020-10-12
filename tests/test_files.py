@@ -1,7 +1,9 @@
+import mock
+import hashlib
 import os
 import unittest
 
-from iarp_utils.files import unique_file_exists, get_mime_types_as_str, MIME_TYPES_LIST
+from iarp_utils.files import unique_file_exists, get_mime_types_as_str, MIME_TYPES_LIST, generate_file_hash
 from tests import BASE_DIR
 
 
@@ -60,3 +62,15 @@ class FilesTests(unittest.TestCase):
         self.assertIn('application/vnd.spreadsheet-openxml', MIME_TYPES_LIST)
         self.assertIn('application/xls', MIME_TYPES_LIST)
         self.assertIn('application/xlsx', MIME_TYPES_LIST)
+
+    def test_generate_file_hash(self):
+        with mock.patch('%s.open' % __name__, mock.mock_open(read_data=b'aaa'), create=True) as m:
+            with open('gen_hash_test_file.txt') as fo:
+                result = generate_file_hash(fo)
+            self.assertEqual('47bce5c74f589f4867dbd57e9ca9f808', result)
+
+    def test_generate_file_hash_with_sha1(self):
+        with mock.patch('%s.open' % __name__, mock.mock_open(read_data=b'aaa'), create=True) as m:
+            with open('gen_hash_test_file.txt') as fo:
+                result = generate_file_hash(fo, func=hashlib.sha1)
+            self.assertEqual('7e240de74fb1ed08fa08d38063f6a6a91462a815', result)

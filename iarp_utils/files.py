@@ -1,4 +1,5 @@
 import glob
+import hashlib
 import os
 import requests
 import shutil
@@ -6,6 +7,19 @@ import time
 import zipfile
 
 from .strings import random_character_generator
+
+
+def generate_file_hash(opened_file, func=hashlib.md5):
+    hasher = func()
+    opened_file.seek(0)
+    while True:
+        buf = opened_file.read(104857600)
+        if not buf:
+            break
+        hasher.update(buf)
+    output = hasher.hexdigest()
+    opened_file.seek(0)
+    return output
 
 
 def download_file(url: str, path_to_file):
