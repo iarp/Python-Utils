@@ -9,7 +9,7 @@ setup(
     author_email='iarp.opensource@gmail.com',
     license='MIT',
     packages=['iarp_utils'],
-    install_requires=[],
+    install_requires=['hashlib'],
     extras_require={
         'browser': ['selenium', 'requests'],
         'SQLServer': ['pyodbc'],

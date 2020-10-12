@@ -1,7 +1,7 @@
 import base64
 import binascii
-import copy
 import configparser as cfgp
+import copy
 import datetime
 import json
 import os

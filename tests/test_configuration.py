@@ -1,5 +1,4 @@
 import datetime
-import os
 import unittest
 from unittest import mock
 import warnings
@@ -9,7 +8,6 @@ from iarp_utils.configuration import (
     _encode_config, _load_json_data, _dump_json_data,
     _CustomJSONDecoder, _CustomJSONEncoder, _EncodeManager
 )
-from tests import BASE_DIR
 
 
 class ConfigurationTests(unittest.TestCase):
