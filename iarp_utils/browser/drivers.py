@@ -188,6 +188,9 @@ class DriverBase:
 
         data[driver_name].insert(0, datetime.datetime.now().isoformat())
 
+        # 2021-01-12: make sure directory exists...
+        os.makedirs(os.path.dirname(dt_file), exist_ok=True)
+
         with open(dt_file, 'w') as fo:
             json.dump(data, fo, indent=4)
 
