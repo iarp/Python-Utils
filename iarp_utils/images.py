@@ -29,3 +29,11 @@ def create_thumbnail(infile, outfile, width, height):
     img = img.crop((left, upper, right, lower))
     img.thumbnail(thumb, Image.ANTIALIAS)
     img.save(outfile)
+
+
+def create_width_proportional_thumbnail(infile, outfile, width):
+    img = Image.open(infile)
+    wpercent = (width / float(img.size[0]))
+    hsize = int((float(img.size[1]) * float(wpercent)))
+    img = img.resize((width, hsize), Image.ANTIALIAS)
+    img.save(outfile)
