@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='iarp_utils',
-    version='1.0.1',
+    version='1.0.2',
     description='A personal collection of common python utilities used in various projects',
     url='https://bitbucket.org/iarp/iarp-python-utils/',
     author='IARP',
@@ -15,6 +15,7 @@ setup(
         'SQLServer': ['pyodbc'],
         'MySQL': ['mysql-connector-python'],
         'tools': ['psutil'],
+        'images': ['pillow'],
     },
     zip_safe=False
 )
