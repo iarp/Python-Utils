@@ -1,4 +1,5 @@
 import enum
+import importlib
 import os
 import subprocess
 import sys
@@ -75,3 +76,18 @@ class OSTypes(enum.Enum):
             return OSTypes.MAC
         elif pl == "win32":
             return OSTypes.WIN
+
+
+def import_attribute(path):
+    assert isinstance(path, str)
+    pkg, attr = path.rsplit(".", 1)
+    ret = getattr(importlib.import_module(pkg), attr)
+    return ret
+
+
+def import_callable(path_or_callable):
+    if not hasattr(path_or_callable, "__call__"):
+        ret = import_attribute(path_or_callable)
+    else:
+        ret = path_or_callable
+    return ret
