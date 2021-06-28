@@ -7,7 +7,6 @@ from json.decoder import JSONDecodeError
 from requests.exceptions import ConnectionError, HTTPError
 
 from . import configuration
-from .strings import startswith_many
 
 
 def get_wan_ip_from_linksys_router(router_ip_address='192.168.1.1',
@@ -73,7 +72,7 @@ def get_wan_ip_from_linksys_router(router_ip_address='192.168.1.1',
     if not isinstance(ip, str):
         return
 
-    if startswith_many(ip, private_ip_ranges) and not allow_returning_private_ip_ranges:
+    if ip.startswith(tuple(private_ip_ranges)) and not allow_returning_private_ip_ranges:
         return
 
     if is_valid_ip(ip):

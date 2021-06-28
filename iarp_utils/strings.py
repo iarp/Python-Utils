@@ -126,62 +126,6 @@ def slugify(value, replace_with='-', allow_unicode=False, lowercase=True):
     return re.sub(r'[-\s]+', replace_with, value)
 
 
-def startswith_many(text, many):
-    """ Checks to see if text starts with any one of the many list items.
-
-    Examples:
-
-        >>> vals = ['d:', 'dt:']
-        >>> startswith_many('d:2019-05-01.', vals)
-        True
-        >>> startswith_many('date:2019-05-01', vals)
-        False
-
-    Args:
-        text: Text to check startswith on.
-        many: str or list of strings to check startswith against text
-
-    Returns:
-        bool whether or not one value in many matched text.startswith
-    """
-    if isinstance(many, str):
-        many = [many]
-    elif not isinstance(many, list):
-        raise TypeError('many param must be a list')
-    for item in many:
-        if text.startswith(item):
-            return True
-    return False
-
-
-def endswith_many(text: str, many: [list, str]):
-    """ Checks to see if text ends with any one of the many list items.
-
-    Examples:
-
-        >>> vals = ['meeting.', 'calls.']
-        >>> endswith_many('My meetings.', vals)
-        True
-        >>> endswith_many('My appointments.', vals)
-        False
-
-    Args:
-        text: Text to check endswith on.
-        many: str or list of strings to check endswith against text
-
-    Returns:
-        bool whether or not one value in many matched text.endswith
-    """
-    if isinstance(many, str):
-        many = [many]
-    elif not isinstance(many, list):
-        raise TypeError('many param must be a list')
-    for item in many:
-        if text.endswith(item):
-            return True
-    return False
-
-
 def random_character_generator(length=5):
     return "".join(
         random.SystemRandom().choice(string.ascii_uppercase + string.digits)

@@ -1,6 +1,6 @@
 import unittest
 
-from iarp_utils.strings import startswith_many, endswith_many, slugify, find_between, replace_all, random_character_generator
+from iarp_utils.strings import slugify, find_between, replace_all, random_character_generator
 
 
 class StringsTests(unittest.TestCase):
@@ -51,27 +51,3 @@ class StringsTests(unittest.TestCase):
 
     def test_slugify_custom_replace_with(self):
         self.assertEqual('input/with/spaces', slugify('input with spaces', replace_with='/'))
-
-    def test_startswith_many(self):
-        string = 'here in stringer'
-        matches = ['h', 'he', 'her', 'here']
-        self.assertTrue(startswith_many(string, matches))
-
-        self.assertFalse(startswith_many('not in stringer', matches))
-
-        self.assertTrue(startswith_many(string, 'here'))
-
-        with self.assertRaises(TypeError):
-            startswith_many(string, {'dict': 'value'})
-
-    def test_endswith_many(self):
-        string = 'here in stringer'
-        matches = ['nger', 'r', 'er', 'get']
-        self.assertTrue(endswith_many(string, matches))
-
-        self.assertFalse(endswith_many('stringer is false', matches))
-
-        self.assertTrue(endswith_many(string, 'stringer'))
-
-        with self.assertRaises(TypeError):
-            endswith_many(string, {'dict': 'value'})
