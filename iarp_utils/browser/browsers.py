@@ -370,7 +370,7 @@ class BrowserBase:
 
     def login(self, username, password, username_element_attr_value, password_element_attr_value,
               username_element_attr=By.NAME, password_element_attr=By.NAME,
-              check_attempts=5, check_wait_seconds=2):
+              check_attempts=5, check_wait_seconds=2, split_element_screens=False):
         """ Base login method used by multiple browsers, based on login screens with with
                 username and password fields displayed on a single screen.
 
@@ -388,6 +388,7 @@ class BrowserBase:
             password_element_attr_value: The value for the attribute supplied to find the password element.
             check_attempts: How many times to check for a username element to check if the login failed.
             check_wait_seconds: How many seconds to wait between checks for login failure.
+            split_element_screens: Are username/password inputs on separate screens and we need to wait?
 
         Raises:
             NoSuchElementException: If username or password elements are not found.
@@ -400,10 +401,22 @@ class BrowserBase:
 
         username_element.send_keys(username)
 
-        try:
-            password_element = self.browser.find_element(password_element_attr, password_element_attr_value)
-        except NoSuchElementException:
-            raise NoSuchElementException('Password field is missing') from None
+        if split_element_screens:
+
+            username_element.send_keys(Keys.ENTER)
+
+            try:
+                password_element = self.wait_until(**{
+                    'element_{}'.format(password_element_attr): password_element_attr_value
+                })
+            except NoSuchElementException:
+                raise NoSuchElementException('Password field is missing') from None
+
+        else:
+            try:
+                password_element = self.browser.find_element(password_element_attr, password_element_attr_value)
+            except NoSuchElementException:
+                raise NoSuchElementException('Password field is missing') from None
 
         password_element.send_keys(password)
         password_element.send_keys(Keys.RETURN)
