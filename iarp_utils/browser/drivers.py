@@ -356,8 +356,8 @@ class ChromeDriver(DriverBase):
             return
 
         url = f'{root_url}LATEST_RELEASE'
-        if browser_version:
-            url = f'{root_url}LATEST_RELEASE_{browser_version}'
+        if browser_version_major:
+            url = f'{root_url}LATEST_RELEASE_{browser_version_major}'
 
         log.debug(f'ChromeDriver version check: requesting {url}')
         self.latest_version = requests.get(url).text.strip()
