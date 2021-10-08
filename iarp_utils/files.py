@@ -9,6 +9,27 @@ import zipfile
 from .strings import random_character_generator
 
 
+class ZipFileWithPermissions(zipfile.ZipFile):
+    """ Custom ZipFile class for handling file permissions.
+
+        https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
+
+        "Python zipfile removes execute permissions from binaries":
+        The reason for this can be found in the _extract_member() method in zipfile.py,
+        it only calls shutil.copyfileobj() which will write the output file without any execute bits.
+    """
+    def _extract_member(self, member, targetpath, pwd):
+        if not isinstance(member, zipfile.ZipInfo):
+            member = self.getinfo(member)
+
+        target_path = super()._extract_member(member, targetpath, pwd)
+
+        attr = member.external_attr >> 16
+        if attr != 0:
+            os.chmod(target_path, attr)
+        return target_path
+
+
 def generate_file_hash(opened_file, func=hashlib.md5):
     hasher = func()
     opened_file.seek(0)
@@ -65,7 +86,7 @@ def extract_zip_single_file(zip_file: str, file_to_extract: str, folder_to_extra
     """
     # If another process happens to be running and is locked onto the zip file,
     # it'll raise PermissionError. Retry every 30 seconds for 10 attempts.
-    with zipfile.ZipFile(zip_file) as zf:
+    with ZipFileWithPermissions(zip_file) as zf:
         attempt = 0
         while attempt <= max_attempts:
             attempt += 1
