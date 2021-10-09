@@ -268,8 +268,7 @@ class DriverBase:
         return version
 
 
-class ChromeDriver(DriverBase):
-    driver = 'chromedriver.exe'
+class _GoogleBaseBrowserDriverBase(DriverBase):
     webdriver = webdriver.Chrome
 
     def __init__(self, **kwargs):
@@ -344,9 +343,7 @@ class ChromeDriver(DriverBase):
         log.debug(f'ChromeDriver version checks: majors: browser: '
                   f'{browser_version_major} driver: {driver_version_major}')
 
-        majors_matching = None
-        if browser_version_major and driver_version_major:
-            majors_matching = browser_version_major == driver_version_major
+        majors_matching = browser_version_major and browser_version_major == driver_version_major
 
         log.debug(f'ChromeDriver version checks: majors match: {majors_matching}')
 
@@ -364,7 +361,11 @@ class ChromeDriver(DriverBase):
 
         self.quit()
 
-        zip_file_name = 'chromedriver_win32.zip'
+        if IS_WINDOWS_OS:
+            zip_file_name = 'chromedriver_win32.zip'
+        else:
+            zip_file_name = 'chromedriver_linux64.zip'
+
         try:
             local_zip_file = os.path.join(settings.CACHE_DIR, zip_file_name)
         except AttributeError:
@@ -379,6 +380,14 @@ class ChromeDriver(DriverBase):
             local_zip_file=local_zip_file,
             extracting_file=self.driver
         )
+
+
+class ChromeDriver(_GoogleBaseBrowserDriverBase):
+    driver = 'chromedriver.exe' if IS_WINDOWS_OS else 'chromedriver'
+
+
+class Chromium(_GoogleBaseBrowserDriverBase):
+    driver = 'chromium'
 
 
 class FirefoxDriver(DriverBase):
