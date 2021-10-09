@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='iarp_utils',
-    version='1.0.2',
+    version='1.1.0',
     description='A personal collection of common python utilities used in various projects',
     url='https://bitbucket.org/iarp/iarp-python-utils/',
     author='IARP',
