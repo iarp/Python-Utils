@@ -1,4 +1,4 @@
-from collections import Callable, OrderedDict
+from collections import OrderedDict
 
 
 class NotifyDict(dict):
@@ -33,7 +33,7 @@ class DefaultOrderedDict(OrderedDict):
         # will not throw KeyErrors about many not existing.
     """
     def __init__(self, default_factory, *a, **kw):
-        if not isinstance(default_factory, Callable):
+        if not callable(default_factory):
             raise TypeError('first argument must be callable')
         OrderedDict.__init__(self, *a, **kw)
         self.default_factory = default_factory

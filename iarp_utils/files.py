@@ -1,10 +1,9 @@
 import glob
 import hashlib
 import os
-import tarfile
-
 import requests
 import shutil
+import tarfile
 import time
 import zipfile
 
