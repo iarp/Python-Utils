@@ -1,6 +1,8 @@
 import glob
 import hashlib
 import os
+import tarfile
+
 import requests
 import shutil
 import time
@@ -58,6 +60,22 @@ def download_file(url: str, path_to_file):
         shutil.copyfileobj(response.raw, out_file)
 
 
+def _extract__single_file(extractor, compressed_file, file_to_extract, destination,
+                          max_attempts=10, max_wait_in_seconds=30, log=None, **kwargs):
+    with extractor(compressed_file) as open_file:
+        attempt = 0
+        while attempt <= max_attempts:
+            attempt += 1
+
+            try:
+                open_file.extract(file_to_extract, destination, **kwargs)
+                break
+            except PermissionError:
+                if log:
+                    log.exception(f'{file_to_extract} to {destination} failed {attempt}/{max_attempts}.')
+                time.sleep(max_wait_in_seconds)
+
+
 def extract_zip_single_file(zip_file: str, file_to_extract: str, folder_to_extract_to: str, delete_zip_on_finish=True,
                             max_attempts=10, max_wait_in_seconds=30, log=None, **kwargs):
     """ Extracts a single file from a zip file.
@@ -86,21 +104,58 @@ def extract_zip_single_file(zip_file: str, file_to_extract: str, folder_to_extra
     """
     # If another process happens to be running and is locked onto the zip file,
     # it'll raise PermissionError. Retry every 30 seconds for 10 attempts.
-    with ZipFileWithPermissions(zip_file) as zf:
-        attempt = 0
-        while attempt <= max_attempts:
-            attempt += 1
-
-            try:
-                zf.extract(file_to_extract, folder_to_extract_to, **kwargs)
-                break
-            except PermissionError:
-                if log:
-                    log.exception(f'Unzip {file_to_extract} to {folder_to_extract_to} failed {attempt}/{max_attempts}.')
-                time.sleep(max_wait_in_seconds)
-
+    _extract__single_file(
+        extractor=ZipFileWithPermissions,
+        compressed_file=zip_file,
+        file_to_extract=file_to_extract,
+        destination=folder_to_extract_to,
+        max_attempts=max_attempts, max_wait_in_seconds=max_wait_in_seconds,
+        log=log,
+        **kwargs
+    )
     if delete_zip_on_finish:
         os.remove(zip_file)
+
+
+def extract_tar_single_file(tar_file: str, file_to_extract: str, folder_to_extract_to: str, delete_tar_on_finish=True,
+                            max_attempts=10, max_wait_in_seconds=30, log=None, **kwargs):
+    """ Extracts a single file from a tar file.
+
+    Examples:
+
+        >>> extract_tar_single_file('/tmp/tmp.tgz', 'driver.so', '/etc/my-app')
+
+        # If the tar has a password
+        >>> extract_tar_single_file('/tmp/tmp.tgz', 'driver.so', '/etc/my-app', pwd='12345')
+
+        >>> log = logging.getLogger('myLogger')
+        >>> extract_tar_single_file('/tmp/tmp.tgz', 'driver.so', '/etc/my-app', log=log)
+        # if an extract failure happens, the following gets logged
+        Untar {file_to_extract} to {folder_to_extract_to} failed {attempt}/{max_attempts}.
+
+    Args:
+        tar_file: Path to the tar file
+        file_to_extract: File within the tar file to extract
+        folder_to_extract_to: Where to extract the file to
+        delete_tar_on_finish: Remove the tar when done?
+        max_attempts: How many times do we try reading the tar file if something has a lock on it?
+        max_wait_in_seconds: How many seconds to we wait between attempts?
+        log: If using logging, supply the logger here
+        **kwargs: passed into tarfile.extract, namely for passworded tar files
+    """
+    # If another process happens to be running and is locked onto the zip file,
+    # it'll raise PermissionError. Retry every 30 seconds for 10 attempts.
+    _extract__single_file(
+        extractor=tarfile.open,
+        compressed_file=tar_file,
+        file_to_extract=file_to_extract,
+        destination=folder_to_extract_to,
+        max_attempts=max_attempts, max_wait_in_seconds=max_wait_in_seconds,
+        log=log,
+        **kwargs
+    )
+    if delete_tar_on_finish:
+        os.remove(tar_file)
 
 
 def unique_file_exists(folder, filename, extension, filename_format="{filename}_{value}.{extension}", **kwargs):

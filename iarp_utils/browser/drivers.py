@@ -3,13 +3,16 @@ import json
 import logging
 import os
 import shutil
+import tarfile
 import tempfile
 import warnings
+import zipfile
 
 from ..datetimes import fromisoformat
 from ..exceptions import ImproperlyConfigured
 from ..files import (
     download_file,
+    extract_tar_single_file,
     extract_zip_single_file,
     get_mime_types_as_str,
 )
@@ -59,13 +62,27 @@ def download_and_extract_zip_file(url, local_zip_file, extracting_file, **kwargs
 
     download_file(url=url, path_to_file=local_zip_file)
 
-    extract_zip_single_file(
-        zip_file=local_zip_file,
-        file_to_extract=extracting_file,
-        folder_to_extract_to=DEFAULT_DRIVER_ROOT,
-        log=log,
-        **kwargs
-    )
+    if zipfile.is_zipfile(local_zip_file):
+
+        extract_zip_single_file(
+            zip_file=local_zip_file,
+            file_to_extract=extracting_file,
+            folder_to_extract_to=DEFAULT_DRIVER_ROOT,
+            log=log,
+            **kwargs
+        )
+
+    elif tarfile.is_tarfile(local_zip_file):
+        extract_tar_single_file(
+            tar_file=local_zip_file,
+            file_to_extract=extracting_file,
+            folder_to_extract_to=DEFAULT_DRIVER_ROOT,
+            log=log,
+            **kwargs
+        )
+
+    else:
+        raise ValueError(f'File {local_zip_file} is not compatible with zipfile or tarfile libraries.')
 
 
 class DriverBase:
@@ -453,8 +470,12 @@ class FirefoxDriver(DriverBase):
 
         BITNESS = get_system_bitness()
         val_checker = f'win{BITNESS}' if IS_WINDOWS_OS else f'linux{BITNESS}'
+        wanted_file_types = [
+            'application/zip',      # Windows
+            'application/x-gzip'    # Linux
+        ]
         for dl in self.latest_version.get('assets', []):
-            if dl.get('content_type') == 'application/zip' and val_checker in dl.get('browser_download_url', ''):
+            if dl.get('content_type') in wanted_file_types and val_checker in dl.get('browser_download_url', ''):
                 log.debug(f'FirefoxDriver version check: found latest version from url for {val_checker}')
                 break
         else:
