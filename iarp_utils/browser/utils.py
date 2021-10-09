@@ -24,7 +24,7 @@ def chrome_version(browser_type=ChromeType.GOOGLE):
     """
     cmd_mapping = {
         ChromeType.GOOGLE: {
-             OSTypes.LINUX: [
+            OSTypes.LINUX: [
                 ['google-chrome', '--version'], ['google-chrome-stable', '--version'],
                 ['chromium', '--version'], ['chromium-browser', '--version'],
             ],
