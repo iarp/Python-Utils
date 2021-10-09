@@ -237,7 +237,7 @@ class DriverBase:
 
         root_driver = os.path.join(DEFAULT_DRIVER_ROOT, filename)
         if os.path.isfile(root_driver):
-            log.debug(f'webdriver binary: located at default {root_driver}')
+            log.debug(f'{self.__class__.__name__} binary located at default {root_driver}')
             return root_driver
 
         for root in ['bin/', '', 'setup/', 'setup/bin/']:
@@ -248,10 +248,10 @@ class DriverBase:
                 root_driver = os.path.join(root, filename)
 
             if os.path.isfile(root_driver):
-                log.debug(f'webdriver binary: located at {root_driver}')
+                log.debug(f'{self.__class__.__name__} binary located at {root_driver}')
                 return root_driver
 
-        log.critical('webdriver binary: not found anywhere')
+        log.critical(f'{self.__class__.__name__} binary not found anywhere')
         raise FileNotFoundError('browser driver not found')
 
     def quit(self, **kwargs):
@@ -281,7 +281,7 @@ class DriverBase:
     def get_driver_version(self):
         binary = self.binary_location()
         version = utils.binary_file_version(binary)
-        log.debug(f'DriverBase binary version: found {version}')
+        log.debug(f'{self.__class__.__name__} binary version: found {version}')
         return version
 
 
@@ -292,6 +292,7 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
         super().__init__(**kwargs)
 
         if self.headless and not self.user_agent:
+            # Headless Chrome sends a user agent telling the website its headless. Lets override that.
             self.user_agent = f'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 ' \
                               f'(KHTML, like Gecko) Chrome/{utils.chrome_version()} Safari/537.36'
 
@@ -315,7 +316,7 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
             version = capabilities['browserVersion'].split('.')[0]
         except (AttributeError, IndexError, KeyError, TypeError):
             version = utils.chrome_version()
-        log.debug(f'{self.__class__.__name__} browser version: found {version}')
+        log.debug(f'{self.__class__.__name__} browser version: {version}')
         return version
 
     def get_driver_version(self):
@@ -327,7 +328,7 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
                 version = capabilities['chrome']['chromedriverVersion'].split('.')[0]
             except (AttributeError, IndexError, KeyError, TypeError):
                 version = None
-        log.debug(f'{self.__class__.__name__} driver version: found {version}')
+        log.debug(f'{self.__class__.__name__} driver version: {version}')
         return version
 
     def check_driver_version(self):
@@ -357,12 +358,10 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
         except (AttributeError, IndexError):
             driver_version_major = None
 
-        log.debug(f'{self.__class__.__name__} version checks: majors: browser: '
-                  f'{browser_version_major} driver: {driver_version_major}')
+        log.debug(f'{self.__class__.__name__} version check: browser: '
+                  f'{browser_version} driver: {driver_version}')
 
         majors_matching = browser_version_major and browser_version_major == driver_version_major
-
-        log.debug(f'{self.__class__.__name__} version checks: majors match: {majors_matching}')
 
         # If we obtained the browsers version and the driver version matches,
         # we don't need to check anything more.
@@ -375,6 +374,7 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
 
         log.debug(f'{self.__class__.__name__} version check: requesting {url}')
         self.latest_version = requests.get(url).text.strip()
+        log.debug(f'{self.__class__.__name__} version check: latest found {self.latest_version}')
 
         self.quit()
 
@@ -390,7 +390,8 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
 
         file_url = f'{root_url}{self.latest_version}/{zip_file_name}'
         log.debug(f'{self.__class__.__name__} version check: downloading {file_url}')
-        log.debug(f'{self.__class__.__name__} version check: to {local_zip_file} extracting {self.driver}')
+        log.debug(f'{self.__class__.__name__} version check: to {local_zip_file} extracting '
+                  f'{self.driver} to {DEFAULT_DRIVER_ROOT}')
 
         download_and_extract_zip_file(
             url=file_url,
@@ -436,9 +437,9 @@ class FirefoxDriver(DriverBase):
             try:
                 capabilities = self.get_capabilities()
                 version = capabilities['moz:geckodriverVersion'].split('.')[0]
+                log.debug(f'FirefoxDriver driver version: found {version}')
             except (AttributeError, IndexError, KeyError, TypeError):
                 version = None
-        log.debug(f'FirefoxDriver driver version: found {version}')
         return version
 
     def check_driver_version(self):
@@ -457,6 +458,7 @@ class FirefoxDriver(DriverBase):
             url = 'https://api.github.com/repos/mozilla/geckodriver/releases'
             log.debug(f'FirefoxDriver version check: requesting {url}')
             self.latest_version = requests.get(url).json()[0]
+            log.debug(f"FirefoxDriver version check: latest version {self.latest_version['tag_name']}")
 
         driver_version = self.get_driver_version()
 
@@ -492,7 +494,8 @@ class FirefoxDriver(DriverBase):
 
         file_url = dl['browser_download_url']
         log.debug(f'FirefoxDriver version check: downloading {file_url}')
-        log.debug(f'FirefoxDriver version check: to {local_zip_file} extracting {self.driver}')
+        log.debug(f'FirefoxDriver version check: to {local_zip_file} extracting '
+                  f'{self.driver} to {DEFAULT_DRIVER_ROOT}')
 
         download_and_extract_zip_file(
             url=file_url,

@@ -175,11 +175,10 @@ class BrowserBase:
         self.active_driver = self.selected_driver(**self.selected_driver_kwargs)
 
         try:
-            log.debug('browser starting driver')
             return self.active_driver.start()
         except SessionNotCreatedException:
             # SessionNotCreatedException typically means mismatching browser and driver version
-            log.critical('browser failed to start driver SessionNotCreatedException')
+            log.critical('browser failed to start driver with SessionNotCreatedException')
 
             # Only allow 1 browser version checker to be running at a time.
             with PIDFile('browser_version_checker') as good:
