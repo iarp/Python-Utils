@@ -18,3 +18,15 @@ pipelines:
         script:
           - pip install -r requirements-dev.txt
           - python setup.py test
+    - step:
+        image: python:3.9.7
+        name: Python 3.9
+        script:
+          - pip install -r requirements-dev.txt
+          - python setup.py test
+    - step:
+        image: python:3.10.1
+        name: Python 3.10
+        script:
+          - pip install -r requirements-dev.txt
+          - python setup.py test
