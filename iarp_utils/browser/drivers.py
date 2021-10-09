@@ -298,7 +298,7 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
             version = capabilities['browserVersion'].split('.')[0]
         except (AttributeError, IndexError, KeyError, TypeError):
             version = utils.chrome_version()
-        log.debug(f'ChromeDriver browser version: found {version}')
+        log.debug(f'{self.__class__.__name__} browser version: found {version}')
         return version
 
     def get_driver_version(self):
@@ -310,17 +310,17 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
                 version = capabilities['chrome']['chromedriverVersion'].split('.')[0]
             except (AttributeError, IndexError, KeyError, TypeError):
                 version = None
-        log.debug(f'ChromeDriver driver version: found {version}')
+        log.debug(f'{self.__class__.__name__} driver version: found {version}')
         return version
 
     def check_driver_version(self):
         """ Check to ensure the local chromedriver being used is valid for the chrome installation. """
 
         if WEBDRIVER_IN_PATH:
-            log.debug('ChromeDriver version checks: not checking due to WEBDRIVER_IN_PATH=True')
+            log.debug(f'{self.__class__.__name__} version checks: not checking due to WEBDRIVER_IN_PATH=True')
             return
         if not requests:
-            log.debug('ChromeDriver version checks: not checking due to requests not being installed.')
+            log.debug(f'{self.__class__.__name__} version checks: not checking due to requests not being installed.')
             warnings.warn('requests not installed. Required to auto-download browser driver. "pip install requests"',
                           ImportWarning)
             return
@@ -340,12 +340,12 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
         except (AttributeError, IndexError):
             driver_version_major = None
 
-        log.debug(f'ChromeDriver version checks: majors: browser: '
+        log.debug(f'{self.__class__.__name__} version checks: majors: browser: '
                   f'{browser_version_major} driver: {driver_version_major}')
 
         majors_matching = browser_version_major and browser_version_major == driver_version_major
 
-        log.debug(f'ChromeDriver version checks: majors match: {majors_matching}')
+        log.debug(f'{self.__class__.__name__} version checks: majors match: {majors_matching}')
 
         # If we obtained the browsers version and the driver version matches,
         # we don't need to check anything more.
@@ -356,7 +356,7 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
         if browser_version_major:
             url = f'{root_url}LATEST_RELEASE_{browser_version_major}'
 
-        log.debug(f'ChromeDriver version check: requesting {url}')
+        log.debug(f'{self.__class__.__name__} version check: requesting {url}')
         self.latest_version = requests.get(url).text.strip()
 
         self.quit()
@@ -372,8 +372,8 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
             local_zip_file = zip_file_name
 
         file_url = f'{root_url}{self.latest_version}/{zip_file_name}'
-        log.debug(f'ChromeDriver version check: downloading {file_url}')
-        log.debug(f'ChromeDriver version check: to {local_zip_file} extracting {self.driver}')
+        log.debug(f'{self.__class__.__name__} version check: downloading {file_url}')
+        log.debug(f'{self.__class__.__name__} version check: to {local_zip_file} extracting {self.driver}')
 
         download_and_extract_zip_file(
             url=file_url,
