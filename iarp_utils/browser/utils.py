@@ -24,13 +24,18 @@ def chrome_version(browser_type=ChromeType.GOOGLE):
     """
     cmd_mapping = {
         ChromeType.GOOGLE: {
-            OSTypes.LINUX: 'google-chrome --version || google-chrome-stable --version',
+             OSTypes.LINUX: [
+                ['google-chrome', '--version'], ['google-chrome-stable', '--version'],
+                ['chromium', '--version'], ['chromium-browser', '--version'],
+            ],
             OSTypes.MAC: r'/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --version',
             OSTypes.WIN: r'reg query "HKEY_CURRENT_USER\Software\Google\Chrome\BLBeacon" /v version'
         },
         ChromeType.CHROMIUM: {
-            OSTypes.LINUX: 'chromium --version || chromium-browser --version',
-            OSTypes.MAC: r'/Applications/Chromium.app/Contents/MacOS/Chromium --version',
+            OSTypes.LINUX: [
+                ['chromium', '--version'], ['chromium-browser', '--version'],
+            ],
+            OSTypes.MAC: '/Applications/Chromium.app/Contents/MacOS/Chromium --version',
             OSTypes.WIN: r'reg query "HKEY_CURRENT_USER\Software\Chromium\BLBeacon" /v version'
         },
         ChromeType.MSEDGE: {
@@ -57,11 +62,14 @@ def firefox_version():
         OSTypes.WIN: [
             r'"C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe" --version',
             r'"C:\\Program Files\\Mozilla Firefox\\firefox.exe" --version'
+        ],
+        OSTypes.LINUX: [
+            ['firefox', '--version'],
         ]
     }
 
     cmds = cmd_mapping.get(OSTypes.active())
-    return _process_version_commands('Chrome', cmds)
+    return _process_version_commands('Firefox', cmds, r'\d+\.\d+')
 
 
 def _process_version_commands(name, cmds, pattern=r'\d+\.\d+\.\d+\.\d+|\d+\.\d+\.\d+'):
@@ -74,7 +82,7 @@ def _process_version_commands(name, cmds, pattern=r'\d+\.\d+\.\d+\.\d+|\d+\.\d+\
 
     for cmd in cmds:
         try:
-            stdout = subprocess.check_output(cmd)
+            stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout.read()
             break
         except: # noqa
             pass
