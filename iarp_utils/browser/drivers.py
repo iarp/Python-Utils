@@ -404,10 +404,6 @@ class ChromeDriver(_GoogleBaseBrowserDriverBase):
     driver = 'chromedriver.exe' if IS_WINDOWS_OS else 'chromedriver'
 
 
-class Chromium(_GoogleBaseBrowserDriverBase):
-    driver = 'chromium'
-
-
 class FirefoxDriver(DriverBase):
     driver = 'geckodriver.exe' if IS_WINDOWS_OS else 'geckodriver'
     webdriver = webdriver.Firefox
