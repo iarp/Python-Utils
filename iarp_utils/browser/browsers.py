@@ -129,7 +129,7 @@ class BrowserBase:
         if self._execute_initialize:
             self.initialize()
 
-    def change_headless_state(self):
+    def swap_headless_state(self):
         """ Swaps the current session to/from headless state.
 
         cookies are only copied for the currently loaded domain.
@@ -486,7 +486,7 @@ class BrowserBase:
         """
         if seconds is None:
             seconds = self.global_wait
-        time.sleep(seconds)
+        time.sleep(seconds or self.global_wait)
 
 
 class FirefoxBrowser(BrowserBase):
