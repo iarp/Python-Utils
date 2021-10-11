@@ -403,6 +403,9 @@ class BrowserBase:
 
             username_element.send_keys(Keys.ENTER)
 
+            if password_element_attr == By.CLASS_NAME:
+                password_element_attr = 'class'
+
             try:
                 password_element = self.wait_until(**{
                     f'element_{password_element_attr}': password_element_attr_value
