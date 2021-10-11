@@ -100,7 +100,7 @@ class LogSystem:
         log.setLevel(level or self.level)
 
         if write_to_file:
-            log_file = os.path.join(self.log_path, '{}.log'.format(logger_name))
+            log_file = os.path.join(self.log_path, f'{logger_name}.log')
 
             file_handler = logging.FileHandler(log_file, mode='w')
             if write_mode.lower() in ['a', 'append']:

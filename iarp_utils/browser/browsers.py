@@ -152,7 +152,6 @@ class BrowserBase:
         self.load_url(current_url)
         self.browser.delete_all_cookies()
         for cookie in cookies:
-            print(cookie)
             self.browser.add_cookie(cookie)
         time.sleep(2)
         self.load_url(current_url)
@@ -406,7 +405,7 @@ class BrowserBase:
 
             try:
                 password_element = self.wait_until(**{
-                    'element_{}'.format(password_element_attr): password_element_attr_value
+                    f'element_{password_element_attr}': password_element_attr_value
                 })
             except NoSuchElementException:
                 raise NoSuchElementException('Password field is missing') from None

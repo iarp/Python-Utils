@@ -78,7 +78,9 @@ def _encode_string(raw_data, n=20, encoding='utf8'):
         if len(item) == n:
             new_encoded_string.append(random_character_generator(n))
 
-    return '{}{}'.format(''.join(new_encoded_string), str(n).rjust(3, '0'))
+    new_string = ''.join(new_encoded_string)
+    padded_n = str(n).rjust(3, '0')
+    return f'{new_string}{padded_n}'
 
 
 def decode_object(data, **kwargs):
