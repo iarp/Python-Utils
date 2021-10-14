@@ -312,7 +312,7 @@ def save(config: dict, file_location='config.json', use_relative_path=False,
         fw.write(dumped_data)
 
 
-def load_ini(file_name='setup/config.ini', lower_all_keys=False, encoded_passwords=True):
+def load_ini(file_name='setup/config.ini', lower_all_keys=False, encoded_passwords=True):  # pragma: no cover
     """
     Loads configuration ini files.
     """
@@ -387,7 +387,7 @@ def load_ini(file_name='setup/config.ini', lower_all_keys=False, encoded_passwor
     return config
 
 
-def save_ini(config, file_location='setup/config.ini', encode_passwords=True):
+def save_ini(config, file_location='setup/config.ini', encode_passwords=True):  # pragma: no cover
     """
     Saves the configuration ini file.
     """

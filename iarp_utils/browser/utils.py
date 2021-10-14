@@ -92,5 +92,4 @@ def _process_version_commands(name, cmds, pattern=r'\d+\.\d+\.\d+\.\d+|\d+\.\d+\
     version = re.search(pattern, stdout.decode('utf-8'))
     if not version:
         raise ValueError(f'Could not process version for {name} commands output: {cmds}')
-    current_version = version.group(0)
-    return current_version
+    return version.group(0)

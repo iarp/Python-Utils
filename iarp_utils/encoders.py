@@ -67,7 +67,7 @@ def encode_object(raw_data, garbage_length=4000, **kwargs):
 
 def _encode_string(raw_data, n=20, encoding='utf8'):
     if n > 999:
-        raise ValueError('n is greater than or equal to 100, 99 or lesser is permitted at this time.')
+        raise ValueError(f'n must be 999 or lesser, found {n}')
 
     encoded_data = base64.b64encode(raw_data.encode(encoding)).decode(encoding)
     split_encoded = [encoded_data[i:i + n] for i in range(0, len(encoded_data), n)]

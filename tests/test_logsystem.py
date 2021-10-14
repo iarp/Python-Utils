@@ -62,3 +62,11 @@ class LogSystemTests(unittest.TestCase):
     def test_logsystem_config_not_dict(self):
         with self.assertRaises(ValueError):
             self.logsystem = LogSystem(config=True)
+
+    def test_logsystem_config_level_as_integer(self):
+        self.logsystem = LogSystem(config={'logging': {'level': 50}})
+        self.assertEqual(50, self.logsystem.level)
+
+    def test_logsystem_config_level_as_integer_fails_too_high(self):
+        self.logsystem = LogSystem(config={'logging': {'level': 51}})
+        self.assertEqual(10, self.logsystem.level)

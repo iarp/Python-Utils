@@ -186,6 +186,13 @@ def unique_file_exists(folder, filename, extension, filename_format="{filename}_
         extension: The extension
         filename_format: If the file exists, this is the format for the new name.
 
+        kwargs:
+            use_counter: Whether or not to use the # in the generated filename when a file exists
+            generator: a function that returns whatever generated value you want in place of #.
+                        You must set use_counter=False for this to work.
+                        The function must accept a param named length defining generating string length.
+            length: length of randomly generated string (only used when use_counter=False)
+
     Returns:
         string containing valid filepath.
     """
