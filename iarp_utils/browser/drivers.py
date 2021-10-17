@@ -44,14 +44,14 @@ try:
 
     WEBDRIVER_IN_PATH = getattr(settings, 'BROWSER_WEBDRIVER_IN_PATH', False)
     CHECK_DRIVER_VERSION = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION', True)
-    CHECK_DRIVER_VERSION_INTERVAL = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION_INTERVAL', 7 * 24)
+    CHECK_DRIVER_VERSION_INTERVAL = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION_INTERVAL', 24)
     USER_AGENT = getattr(settings, 'BROWSER_USER_AGENT', None)
 except: # noqa
     settings = None
     DEFAULT_DRIVER_ROOT = 'bin/'
     WEBDRIVER_IN_PATH = False
     CHECK_DRIVER_VERSION = True
-    CHECK_DRIVER_VERSION_INTERVAL = 7 * 24  # Once a week
+    CHECK_DRIVER_VERSION_INTERVAL = 24  # Once a week
     USER_AGENT = None
 
 
@@ -188,7 +188,11 @@ class DriverBase:
                 # If check is not allowed to happen, return now as to prevent
                 # another timestamp from being saved.
                 if not allowed:
-                    log.debug(f'webdriver check: not allowed due to check interval: {hours_ago} > {last_checked}')
+                    tmp = datetime.datetime.now() - last_checked
+                    hours = tmp.days * 24 + tmp.seconds // 3600
+                    minutes = (tmp.seconds % 3600) // 60
+                    log.debug(f'webdriver check: not allowed due to {self._check_driver_version_interval}hr check '
+                              f'interval: {hours}hr {minutes}min since last check')
                     return False
 
             except (TypeError, ValueError, KeyError):
