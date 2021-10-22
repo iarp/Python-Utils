@@ -8,6 +8,7 @@ from ..exceptions import ImproperlyConfigured
 from ..pidfile import PIDFile
 from .drivers import ChromeDriver, DriverBase, FirefoxDriver
 from .exceptions import LoginFailureException
+from ..system import import_attribute
 
 
 try:
@@ -31,7 +32,9 @@ except ImportError:  # pragma: no cover
 try:
     from django.conf import settings
 
-    DEFAULT_DRIVER = getattr(settings, 'BROWSER_DEFAULT_DRIVER', ChromeDriver)
+    DEFAULT_DRIVER = getattr(settings, 'BROWSER_DEFAULT_DRIVER', 'ChromeDriver')
+    if DEFAULT_DRIVER:
+        DEFAULT_DRIVER = import_attribute(DEFAULT_DRIVER)
 except:  # noqa
     settings = None
     DEFAULT_DRIVER = ChromeDriver
