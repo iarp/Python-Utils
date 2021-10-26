@@ -51,13 +51,13 @@ try:
     USER_AGENT = getattr(settings, 'BROWSER_USER_AGENT', None)
 except: # noqa
     settings = None
-    DEFAULT_DRIVER_ROOT = 'bin/'
-    WEBDRIVER_IN_PATH = False
-    CHECK_DRIVER_VERSION = True
-    CHECK_DRIVER_VERSION_INTERVAL = 24  # Once a week
-    USER_AGENT = None
-    DEFAULT_HEADLESS = None
-    DEFAULT_DOWNLOAD_DIRECTORY = None
+    DEFAULT_DRIVER_ROOT = os.environ.get('BROWSER_DRIVER_DIR', 'bin/')
+    WEBDRIVER_IN_PATH = os.environ.get('BROWSER_WEBDRIVER_IN_PATH', False)
+    CHECK_DRIVER_VERSION = os.environ.get('BROWSER_CHECK_DRIVER_VERSION', True)
+    CHECK_DRIVER_VERSION_INTERVAL = os.environ.get('BROWSER_CHECK_DRIVER_VERSION_INTERVAL', 24)
+    USER_AGENT = os.environ.get('BROWSER_USER_AGENT', None)
+    DEFAULT_HEADLESS = os.environ.get('BROWSER_HEADLESS', None)
+    DEFAULT_DOWNLOAD_DIRECTORY = os.environ.get('BROWSER_DEFAULT_DOWNLOAD_DIRECTORY', None)
 
 
 log = logging.getLogger('iarp_utils.browser.drivers')

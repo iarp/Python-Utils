@@ -32,13 +32,12 @@ except ImportError:  # pragma: no cover
 try:
     from django.conf import settings
 
-    DEFAULT_DRIVER = getattr(settings, 'BROWSER_DEFAULT_DRIVER', 'ChromeDriver')
-    if DEFAULT_DRIVER:
-        DEFAULT_DRIVER = import_attribute(DEFAULT_DRIVER)
+    DEFAULT_DRIVER = getattr(settings, 'BROWSER_DEFAULT_DRIVER', 'iarp_utils.browser.drivers.ChromeDriver')
 except:  # noqa
     settings = None
-    DEFAULT_DRIVER = ChromeDriver
+    DEFAULT_DRIVER = os.environ.get('BROWSER_DEFAULT_DRIVER', 'iarp_utils.browser.drivers.ChromeDriver')
 
+DEFAULT_DRIVER = import_attribute(DEFAULT_DRIVER)
 
 log = logging.getLogger('iarp_utils.browser.browsers')
 
