@@ -42,6 +42,8 @@ try:
     if not DEFAULT_DRIVER_ROOT:
         DEFAULT_DRIVER_ROOT = os.path.join(settings.BASE_DIR, 'bin')
 
+    DEFAULT_HEADLESS = getattr(settings, 'BROWSER_HEADLESS', None)
+
     WEBDRIVER_IN_PATH = getattr(settings, 'BROWSER_WEBDRIVER_IN_PATH', False)
     CHECK_DRIVER_VERSION = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION', True)
     CHECK_DRIVER_VERSION_INTERVAL = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION_INTERVAL', 24)
@@ -53,6 +55,7 @@ except: # noqa
     CHECK_DRIVER_VERSION = True
     CHECK_DRIVER_VERSION_INTERVAL = 24  # Once a week
     USER_AGENT = None
+    DEFAULT_HEADLESS = None
 
 
 log = logging.getLogger('iarp_utils.browser.drivers')
@@ -92,7 +95,7 @@ class DriverBase:
         if webdriver is None:
             raise ImproperlyConfigured('selenium is required for iarp_utils.browser to operate. pip install selenium')
 
-        self.headless = kwargs.get('headless')
+        self.headless = kwargs.get('headless', DEFAULT_HEADLESS)
         self._download_directory = kwargs.get('download_directory')
         self.user_agent = kwargs.get('user_agent', USER_AGENT)
         self.latest_version = None
