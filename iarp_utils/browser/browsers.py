@@ -6,9 +6,9 @@ from pathlib import Path
 
 from ..exceptions import ImproperlyConfigured
 from ..pidfile import PIDFile
+from ..system import import_attribute
 from .drivers import ChromeDriver, DriverBase, FirefoxDriver
 from .exceptions import LoginFailureException
-from ..system import import_attribute
 
 
 try:
