@@ -260,7 +260,7 @@ class DriverBase:
                 log.debug(f'{self.__class__.__name__} binary located at {root_driver}')
                 return root_driver
 
-        log.critical(f'{self.__class__.__name__} binary not found anywhere')
+        log.warning(f'{self.__class__.__name__} binary not found anywhere')
         raise FileNotFoundError('browser driver not found')
 
     def quit(self, **kwargs):
@@ -294,8 +294,9 @@ class DriverBase:
         return version
 
 
-class _GoogleBaseBrowserDriverBase(DriverBase):
+class ChromeDriver(DriverBase):
     webdriver = webdriver.Chrome
+    driver = 'chromedriver.exe' if IS_WINDOWS_OS else 'chromedriver'
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -407,10 +408,6 @@ class _GoogleBaseBrowserDriverBase(DriverBase):
             local_zip_file=local_zip_file,
             extracting_file=self.driver
         )
-
-
-class ChromeDriver(_GoogleBaseBrowserDriverBase):
-    driver = 'chromedriver.exe' if IS_WINDOWS_OS else 'chromedriver'
 
 
 class FirefoxDriver(DriverBase):
