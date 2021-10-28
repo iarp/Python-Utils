@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 import time
+import warnings
 from pathlib import Path
 
 from ..exceptions import ImproperlyConfigured
@@ -258,6 +259,10 @@ class BrowserBase:
         return self.browser.find_element(by=find_by, value=find_value)
 
     def fill_input_element(self, value, *args, **kwargs):
+        warnings.warn("fill_input_element is deprecated. Use fill_element instead.", DeprecationWarning)
+        return self.fill_element(value, *args, **kwargs)
+
+    def fill_element(self, value, *args, **kwargs):
         """Finds an element and fills it in using value given.
 
         Args::
