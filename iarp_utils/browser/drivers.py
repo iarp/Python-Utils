@@ -260,7 +260,7 @@ class DriverBase:
                 log.debug(f'{self.__class__.__name__} binary located at {root_driver}')
                 return root_driver
 
-        log.warning(f'{self.__class__.__name__} binary not found anywhere')
+        log.debug(f'{self.__class__.__name__} binary not found anywhere')
         raise FileNotFoundError('browser driver not found')
 
     def quit(self, **kwargs):
