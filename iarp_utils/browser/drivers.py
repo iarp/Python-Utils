@@ -97,7 +97,7 @@ class DriverBase:
         if webdriver is None:
             raise ImproperlyConfigured('selenium is required for iarp_utils.browser to operate. pip install selenium')
 
-        self.headless = kwargs.get('headless', DEFAULT_HEADLESS)
+        self.headless = bool(kwargs.get('headless', DEFAULT_HEADLESS))
         self._download_directory = kwargs.get('download_directory', DEFAULT_DOWNLOAD_DIRECTORY)
         self.user_agent = kwargs.get('user_agent', USER_AGENT)
         self.latest_version = None
