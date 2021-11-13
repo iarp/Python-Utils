@@ -30,6 +30,7 @@ Otherwise add them to `os.environ.setdefault('option name here', '')`
 
 * `BROWSER_HEADLESS` (=False)
   * Should the browser run in headless mode by default?
+  * WARNING: Chrome and Firefox require this setting to be literal True or False, not 1, 0, None. True or False only. 
 
 * `BROWSER_DEFAULT_DOWNLOAD_DIRECTORY` (=tempfile.mkdtemp())
   * Directory to use as the download target
