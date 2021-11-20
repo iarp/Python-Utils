@@ -121,7 +121,7 @@ class DriverBase:
     def browser(self) -> RemoteWebDriver:
         return self._browser
 
-    def get_options(self, **kwargs):
+    def get_driver_arguments(self, **kwargs):
         """ Returns a dict ready for driver initialization, base locates the driver.
 
         Args:
@@ -153,7 +153,7 @@ class DriverBase:
         if self._check_driver_version_allowed():
             self.check_driver_version()
 
-        options = self.get_options()
+        options = self.get_driver_arguments()
         self._browser = self.webdriver(**options)
 
         return self.browser
@@ -293,12 +293,17 @@ class DriverBase:
         log.debug(f'{self.__class__.__name__} binary version: found {version}')
         return version
 
+    def _get_active_profile_data_directory(self):
+        raise NotImplementedError
+
 
 class ChromeDriver(DriverBase):
     webdriver = webdriver.Chrome
     driver = 'chromedriver.exe' if IS_WINDOWS_OS else 'chromedriver'
 
-    def __init__(self, **kwargs):
+    def __init__(self, user_data_directory=None, user_data_profile=None, **kwargs):
+        self._user_data_directory = user_data_directory
+        self._user_data_profile = user_data_profile
         super().__init__(**kwargs)
 
         if self.headless and not self.user_agent:
@@ -306,19 +311,40 @@ class ChromeDriver(DriverBase):
             self.user_agent = f'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 ' \
                               f'(KHTML, like Gecko) Chrome/{utils.chrome_version()} Safari/537.36'
 
-    def get_options(self):
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.headless = self.headless
+    def get_browser_user_data_directory(self):
+        # Where is the user data directory?
+        return self._user_data_directory
+
+    def get_browser_user_data_profile(self):
+        # Which profile within the user_data_directory do we need to load?
+        return self._user_data_profile
+
+    def get_browser_options(self):
+        options = webdriver.ChromeOptions()
+        options.headless = self.headless
+
+        uddir = self.get_browser_user_data_directory()
+        if uddir:
+            options.add_argument(f"--user-data-dir={uddir}")
+
+            uddprofile = self.get_browser_user_data_profile()
+            if uddprofile:
+                options.add_argument(f'--profile-directory={uddprofile}')
 
         if self.download_directory:
-            chrome_options.add_experimental_option('prefs', {
+            options.add_experimental_option('prefs', {
                 'download.default_directory': self.download_directory
             })
 
         if self.user_agent:
-            chrome_options.add_argument(f'--user-agent={self.user_agent}')
+            options.add_argument(f'--user-agent={self.user_agent}')
 
-        return super().get_options(options=chrome_options)
+        return options
+
+    def get_driver_arguments(self):
+        return super().get_driver_arguments(
+            options=self.get_browser_options(),
+        )
 
     def get_browser_version(self):
         capabilities = self.get_capabilities()
@@ -409,13 +435,26 @@ class ChromeDriver(DriverBase):
             extracting_file=self.driver
         )
 
+    def _get_active_profile_data_directory(self):
+        capabilities = self.get_capabilities()
+        return capabilities['chrome']['userDataDir']
+
 
 class FirefoxDriver(DriverBase):
     driver = 'geckodriver.exe' if IS_WINDOWS_OS else 'geckodriver'
     webdriver = webdriver.Firefox
 
-    def get_options(self):
-        profile = webdriver.FirefoxProfile()
+    def __init__(self, profile_directory=None, **kwargs):
+        self._profile_directory = profile_directory
+        super().__init__(**kwargs)
+
+    def get_browser_profile_directory(self):
+        return self._profile_directory
+
+    def get_browser_profile(self):
+        profile = webdriver.FirefoxProfile(
+            profile_directory=self.get_browser_profile_directory()
+        )
 
         if self.download_directory:
             profile.set_preference('browser.download.folderList', 2)
@@ -427,10 +466,18 @@ class FirefoxDriver(DriverBase):
         if self.user_agent:
             profile.set_preference("general.useragent.override", self.user_agent)
 
+        return profile
+
+    def get_browser_options(self):
         options = webdriver.FirefoxOptions()
         options.headless = self.headless
+        return options
 
-        return super().get_options(options=options, firefox_profile=profile)
+    def get_driver_arguments(self):
+        return super().get_driver_arguments(
+            options=self.get_browser_options(),
+            firefox_profile=self.get_browser_profile()
+        )
 
     def get_driver_version(self):
         try:
@@ -504,3 +551,7 @@ class FirefoxDriver(DriverBase):
             local_zip_file=local_zip_file,
             extracting_file=self.driver
         )
+
+    def _get_active_profile_data_directory(self):
+        capabilities = self.get_capabilities()
+        return capabilities["moz:profile"]
