@@ -1,8 +1,5 @@
-import os
 import re
 import subprocess
-import shutil
-import time
 
 from ..system import OSTypes
 
@@ -96,32 +93,3 @@ def _process_version_commands(name, cmds, pattern=r'\d+\.\d+\.\d+\.\d+|\d+\.\d+\
     if not version:
         raise ValueError(f'Could not process version for {name} commands output: {cmds}')
     return version.group(0)
-
-
-def save_working_profile_directory(driver, profile_storage_path):
-    """ Saves the currently in-use browser profile directory to a custom location.
-
-    Args:
-        driver: The driver running the
-        profile_storage_path: Where to save the profiles contents.
-    """
-
-    driver.browser.execute_script("window.close()")
-
-    time.sleep(0.5)
-
-    # Copy the profile directory (must be done BEFORE driver.quit()!)
-    current_profile_path = driver.active_driver._get_active_profile_data_directory()
-
-    assert os.path.isdir(current_profile_path)
-
-    try:
-        shutil.rmtree(profile_storage_path)
-    except FileNotFoundError:
-        pass
-
-    shutil.copytree(
-        src=current_profile_path,
-        dst=profile_storage_path,
-        ignore_dangling_symlinks=True
-    )

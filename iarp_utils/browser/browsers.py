@@ -502,15 +502,15 @@ class FirefoxBrowser(BrowserBase):
     """
         BrowserBase preconfigured to run as Firefox browser.
     """
-    def __init__(self, *args, profile_directory=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         kwargs['selected_driver'] = FirefoxDriver
-        super().__init__(*args, profile_directory=profile_directory, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class ChromeBrowser(BrowserBase):
     """
         BrowserBase preconfigured to run as Chrome browser.
     """
-    def __init__(self, *args, user_data_directory=None, user_data_profile=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         kwargs['selected_driver'] = ChromeDriver
-        super().__init__(*args, user_data_directory=user_data_directory, user_data_profile=user_data_profile, **kwargs)
+        super().__init__(*args, **kwargs)
