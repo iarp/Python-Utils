@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import patch, mock_open
 from pathlib import Path
 
+from iarp_utils.browser import utils
 from iarp_utils.browser.drivers import DriverBase
 
 
@@ -59,3 +60,21 @@ class DriverBaseTests(unittest.TestCase):
 
     def test_driver_webbrowser_is_none_by_default(self):
         self.assertIsNone(self.driver.browser)
+
+
+class BrowserUtilsTests(unittest.TestCase):
+
+    def test_firefox_process_version_commands_output(self):
+        expected = '94.0'
+        agent = f'Mozilla Firefox {expected}\n'
+        version = utils._process_commands_output(agent, r'(\d+.\d+)')
+        self.assertIsNotNone(version)
+        self.assertEqual(expected, version.group(0))
+
+    def test_chrome_process_version_commands_output(self):
+        expected = '97.0.4692'
+        agent = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, " \
+                f"like Gecko) Chrome/{expected} Safari/537.36"
+        version = utils._process_commands_output(agent, r'\d+\.\d+\.\d+')
+        self.assertIsNotNone(version)
+        self.assertEqual(expected, version.group(0))

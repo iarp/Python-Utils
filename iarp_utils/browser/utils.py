@@ -1,7 +1,11 @@
+import logging
 import re
 import subprocess
 
 from ..system import OSTypes
+
+
+log = logging.getLogger('iarp_utils.browser.utils')
 
 
 class ChromeType(object):
@@ -44,8 +48,8 @@ def chrome_version(browser_type=ChromeType.GOOGLE):
         }
     }
 
-    cmds = cmd_mapping[browser_type][OSTypes.active()]
-    return _process_version_commands('Google Chrome', cmds)
+    commands = cmd_mapping[browser_type][OSTypes.active()]
+    return _get_version_from_commands('Google Chrome', commands, r'\d+\.\d+\.\d+')
 
 
 def binary_file_version(binary, version_flag='--version'):
@@ -68,28 +72,46 @@ def firefox_version():
         ]
     }
 
-    cmds = cmd_mapping.get(OSTypes.active())
-    return _process_version_commands('Firefox', cmds, r'\d+\.\d+')
+    commands = cmd_mapping.get(OSTypes.active())
+    return _get_version_from_commands('Firefox', commands, r'(\d+.\d+)')
 
 
-def _process_version_commands(name, cmds, pattern=r'\d+\.\d+\.\d+\.\d+|\d+\.\d+\.\d+'):
+def _run_commands(commands):
 
-    if not cmds:
+    if isinstance(commands, str):
+        commands = [commands]
+
+    for cmd in commands:
+        try:
+            return subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout.read().decode('utf-8').strip()
+        except:  # noqa
+            pass
+
+
+def _process_commands_output(output, pattern):
+    return re.search(pattern, output)
+
+
+def _get_version_from_commands(name, commands, pattern):
+    if not commands:
         raise ValueError(f'No command found for {name} version with os {OSTypes.active()}')
 
-    if isinstance(cmds, str):
-        cmds = [cmds]
+    log.debug(f'{name} version, running commands {commands}')
 
-    for cmd in cmds:
-        try:
-            stdout = subprocess.Popen(cmd, stdout=subprocess.PIPE).stdout.read()
-            break
-        except: # noqa
-            pass
+    output = _run_commands(commands)
+
+    if not output:
+        raise ValueError(f'Could not get version for {name} with this command: {commands}')
+
+    log.debug(f'{name} version, commands returned "{output}"')
+
+    version = _process_commands_output(output, pattern)
+
+    if version:
+        version = version.group(0)
     else:
-        raise ValueError(f'Could not get version for {name} with this command: {cmds}')
+        raise ValueError(f'Could not process version for {name} commands output: {commands}')
 
-    version = re.search(pattern, stdout.decode('utf-8'))
-    if not version:
-        raise ValueError(f'Could not process version for {name} commands output: {cmds}')
-    return version.group(0)
+    log.debug(f'{name} version, version processed as {version}')
+
+    return version
