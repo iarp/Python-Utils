@@ -389,35 +389,24 @@ class BrowserBase:
             NoSuchElementException: If username or password elements are not found.
             LoginFailureException: determined by the username element still existing after submission.
         """
-        try:
-            username_element = self.browser.find_element(username_element_attr, username_element_attr_value)
-        except NoSuchElementException:
-            raise NoSuchElementException('Username field is missing') from None
 
+        if password_element_attr == By.CLASS_NAME:
+            password_element_attr = 'class'
+        if username_element_attr == By.CLASS_NAME:
+            username_element_attr = 'class'
+
+        username_element = self.wait_until(**{
+            f'element_{username_element_attr}': username_element_attr_value
+        })
         username_element.send_keys(username)
 
         if split_element_screens:
-
             username_element.send_keys(Keys.ENTER)
 
-            if password_element_attr == By.CLASS_NAME:
-                password_element_attr = 'class'
-
-            try:
-                password_element = self.wait_until(**{
-                    f'element_{password_element_attr}': password_element_attr_value
-                })
-            except NoSuchElementException:
-                raise NoSuchElementException('Password field is missing') from None
-
-        else:
-            try:
-                password_element = self.browser.find_element(password_element_attr, password_element_attr_value)
-            except NoSuchElementException:
-                raise NoSuchElementException('Password field is missing') from None
-
-        password_element.send_keys(password)
-        password_element.send_keys(Keys.RETURN)
+        password_element = self.wait_until(**{
+            f'element_{password_element_attr}': password_element_attr_value
+        })
+        password_element.send_keys(password + Keys.RETURN)
 
         # Re-check for the username element, if NoSuchElementException is thrown then we're then likely logged in.
         checks = 0
@@ -425,7 +414,10 @@ class BrowserBase:
             checks += 1
 
             try:
-                self.browser.find_element(username_element_attr, username_element_attr_value)
+                if split_element_screens:
+                    self.browser.find_element(password_element_attr, password_element_attr_value)
+                else:
+                    self.browser.find_element(username_element_attr, username_element_attr_value)
             except NoSuchElementException:
                 break
 
