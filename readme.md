@@ -25,7 +25,7 @@ Otherwise add them to `os.environ.setdefault('option name here', '')`
     * ChromeDriver
     * FirefoxDriver
 
-* `BROWSER_DRIVER_DIR` (="bin/")
+* `BROWSER_EXECUTABLE_ROOT` (="bin/")
   * Specifies the default location to find webdrivers
 
 * `BROWSER_HEADLESS` (=False)

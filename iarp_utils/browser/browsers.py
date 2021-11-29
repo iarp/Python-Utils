@@ -7,9 +7,9 @@ from pathlib import Path
 
 from ..exceptions import ImproperlyConfigured
 from ..pidfile import PIDFile
-from ..system import import_attribute
 from .drivers import ChromeDriver, DriverBase, FirefoxDriver
 from .exceptions import LoginFailureException
+from .settings import settings
 
 
 try:
@@ -29,16 +29,6 @@ except ImportError:  # pragma: no cover
     class By:
         NAME = None
         ID = None
-
-try:
-    from django.conf import settings
-
-    DEFAULT_DRIVER = getattr(settings, 'BROWSER_DEFAULT_DRIVER', 'iarp_utils.browser.drivers.ChromeDriver')
-except:  # noqa
-    settings = None
-    DEFAULT_DRIVER = os.environ.get('BROWSER_DEFAULT_DRIVER', 'iarp_utils.browser.drivers.ChromeDriver')
-
-DEFAULT_DRIVER = import_attribute(DEFAULT_DRIVER)
 
 log = logging.getLogger('iarp_utils.browser.browsers')
 
@@ -109,7 +99,7 @@ class BrowserBase:
         self.selected_driver_kwargs = kwargs
         self.active_driver = None  # type: DriverBase
 
-        self.selected_driver = selected_driver or DEFAULT_DRIVER
+        self.selected_driver = selected_driver or settings.DEFAULT_DRIVER
 
         if start_browser:
             self.start_browser()

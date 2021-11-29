@@ -18,17 +18,18 @@ from ..files import (
 )
 from ..system import IS_WINDOWS_OS, get_system_bitness
 from . import utils
+from .settings import settings
 
 
 try:
     from selenium import webdriver
-    from selenium.webdriver.remote.webdriver import (
-        WebDriver as RemoteWebDriver,
-    )
     from selenium.webdriver.chrome.options import Options as _ChromeOptions
     from selenium.webdriver.chrome.service import Service as _ChromeService
     from selenium.webdriver.firefox.options import Options as _FirefoxOptions
     from selenium.webdriver.firefox.service import Service as _FirefoxService
+    from selenium.webdriver.remote.webdriver import (
+        WebDriver as RemoteWebDriver,
+    )
 except ImportError:
     webdriver = None
 
@@ -36,33 +37,6 @@ try:
     import requests
 except ImportError:
     requests = None
-
-try:
-    from django.conf import settings
-
-    # If this is being used in a django installation, look for the path in settings
-    # otherwise base the path on BASE_DIR.
-    DEFAULT_DRIVER_ROOT = getattr(settings, 'BROWSER_DRIVER_DIR', None)
-    if not DEFAULT_DRIVER_ROOT:
-        DEFAULT_DRIVER_ROOT = os.path.join(settings.BASE_DIR, 'bin')
-
-    DEFAULT_HEADLESS = getattr(settings, 'BROWSER_HEADLESS', None)
-    DEFAULT_DOWNLOAD_DIRECTORY = getattr(settings, 'BROWSER_DEFAULT_DOWNLOAD_DIRECTORY', None)
-
-    WEBDRIVER_IN_PATH = getattr(settings, 'BROWSER_WEBDRIVER_IN_PATH', False)
-    CHECK_DRIVER_VERSION = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION', True)
-    CHECK_DRIVER_VERSION_INTERVAL = getattr(settings, 'BROWSER_CHECK_DRIVER_VERSION_INTERVAL', 24)
-    USER_AGENT = getattr(settings, 'BROWSER_USER_AGENT', None)
-except: # noqa
-    settings = None
-    DEFAULT_DRIVER_ROOT = os.environ.get('BROWSER_DRIVER_DIR', 'bin/')
-    WEBDRIVER_IN_PATH = os.environ.get('BROWSER_WEBDRIVER_IN_PATH', False)
-    CHECK_DRIVER_VERSION = os.environ.get('BROWSER_CHECK_DRIVER_VERSION', True)
-    CHECK_DRIVER_VERSION_INTERVAL = os.environ.get('BROWSER_CHECK_DRIVER_VERSION_INTERVAL', 24)
-    USER_AGENT = os.environ.get('BROWSER_USER_AGENT', None)
-    DEFAULT_HEADLESS = os.environ.get('BROWSER_HEADLESS', None)
-    DEFAULT_DOWNLOAD_DIRECTORY = os.environ.get('BROWSER_DEFAULT_DOWNLOAD_DIRECTORY', None)
-
 
 log = logging.getLogger('iarp_utils.browser.drivers')
 
@@ -76,7 +50,7 @@ def download_and_extract_zip_file(url, local_zip_file, extracting_file, **kwargs
         extract_zip_single_file(
             zip_file=local_zip_file,
             file_to_extract=extracting_file,
-            folder_to_extract_to=DEFAULT_DRIVER_ROOT,
+            folder_to_extract_to=settings.EXECUTABLE_ROOT,
             log=log,
             **kwargs
         )
@@ -85,7 +59,7 @@ def download_and_extract_zip_file(url, local_zip_file, extracting_file, **kwargs
         extract_tar_single_file(
             tar_file=local_zip_file,
             file_to_extract=extracting_file,
-            folder_to_extract_to=DEFAULT_DRIVER_ROOT,
+            folder_to_extract_to=settings.EXECUTABLE_ROOT,
             log=log,
             **kwargs
         )
@@ -101,17 +75,18 @@ class DriverBase:
         if webdriver is None:
             raise ImproperlyConfigured('selenium is required for iarp_utils.browser to operate. pip install selenium')
 
-        self.headless = bool(kwargs.get('headless', DEFAULT_HEADLESS))
-        self._download_directory = kwargs.get('download_directory', DEFAULT_DOWNLOAD_DIRECTORY)
-        self.user_agent = kwargs.get('user_agent', USER_AGENT)
+        self.headless = bool(kwargs.get('headless', settings.HEADLESS))
+        self._download_directory = kwargs.get('download_directory', settings.DOWNLOAD_DIRECTORY)
+        self.user_agent = kwargs.get('user_agent', settings.USER_AGENT)
         self.latest_version = None
         self._browser = None
 
         # Whether or not we should check driver version before running the browser.
-        self._check_driver_version = kwargs.get('check_driver_version', CHECK_DRIVER_VERSION)
+        self._check_driver_version = kwargs.get('check_driver_version', settings.CHECK_DRIVER_VERSION)
 
         # How often (in hours) to check if the driver version needs updating
-        self._check_driver_version_interval = kwargs.get('check_driver_version_interval', CHECK_DRIVER_VERSION_INTERVAL)
+        self._check_driver_version_interval = kwargs.get('check_driver_version_interval',
+                                                         settings.CHECK_DRIVER_VERSION_INTERVAL)
 
     @property
     def webdriver(self):
@@ -139,7 +114,7 @@ class DriverBase:
     def get_driver_service(self):
         service = self.service_class()
 
-        if not WEBDRIVER_IN_PATH:
+        if not settings.WEBDRIVER_IN_PATH:
 
             try:
                 binary = self.binary_location()
@@ -174,11 +149,11 @@ class DriverBase:
             log.debug('webdriver check: not checking due to check_driver_version=False')
             return False
 
-        if WEBDRIVER_IN_PATH:
+        if settings.WEBDRIVER_IN_PATH:
             log.debug('webdriver check: not checking due to WEBDRIVER_IN_PATH=True')
             return False
 
-        dt_file = os.path.join(DEFAULT_DRIVER_ROOT, 'check_driver_version.json')
+        dt_file = os.path.join(settings.EXECUTABLE_ROOT, 'check_driver_version.json')
         driver_name = type(self).__name__
 
         try:
@@ -254,17 +229,14 @@ class DriverBase:
 
         filename = self.driver
 
-        root_driver = os.path.join(DEFAULT_DRIVER_ROOT, filename)
+        root_driver = os.path.join(settings.EXECUTABLE_ROOT, filename)
         if os.path.isfile(root_driver):
             log.debug(f'{self.__class__.__name__} binary located at default {root_driver}')
             return root_driver
 
         for root in ['bin/', '', 'setup/', 'setup/bin/']:
 
-            try:
-                root_driver = os.path.join(settings.BASE_DIR, root, filename)
-            except AttributeError:
-                root_driver = os.path.join(root, filename)
+            root_driver = os.path.join(root, filename)
 
             if os.path.isfile(root_driver):
                 log.debug(f'{self.__class__.__name__} binary located at {root_driver}')
@@ -356,7 +328,7 @@ class ChromeDriver(DriverBase):
     def check_driver_version(self):
         """ Check to ensure the local chromedriver being used is valid for the chrome installation. """
 
-        if WEBDRIVER_IN_PATH:
+        if settings.WEBDRIVER_IN_PATH:
             log.debug(f'{self.__class__.__name__} version checks: not checking due to WEBDRIVER_IN_PATH=True')
             return
         if not requests:
@@ -413,7 +385,7 @@ class ChromeDriver(DriverBase):
         file_url = f'{root_url}{self.latest_version}/{zip_file_name}'
         log.debug(f'{self.__class__.__name__} version check: downloading {file_url}')
         log.debug(f'{self.__class__.__name__} version check: to {local_zip_file} extracting '
-                  f'{self.driver} to {DEFAULT_DRIVER_ROOT}')
+                  f'{self.driver} to {settings.EXECUTABLE_ROOT}')
 
         download_and_extract_zip_file(
             url=file_url,
@@ -459,7 +431,7 @@ class FirefoxDriver(DriverBase):
     def check_driver_version(self):
         """ Check to ensure the local geckodriver being used is valid for the firefox installation. """
 
-        if WEBDRIVER_IN_PATH:
+        if settings.WEBDRIVER_IN_PATH:
             log.debug('FirefoxDriver version checks: not checking due to WEBDRIVER_IN_PATH=True')
             return
         if not requests:
@@ -509,7 +481,7 @@ class FirefoxDriver(DriverBase):
         file_url = dl['browser_download_url']
         log.debug(f'FirefoxDriver version check: downloading {file_url}')
         log.debug(f'FirefoxDriver version check: to {local_zip_file} extracting '
-                  f'{self.driver} to {DEFAULT_DRIVER_ROOT}')
+                  f'{self.driver} to {settings.EXECUTABLE_ROOT}')
 
         download_and_extract_zip_file(
             url=file_url,
