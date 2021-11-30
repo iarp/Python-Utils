@@ -33,7 +33,7 @@ except ImportError:  # pragma: no cover
 log = logging.getLogger('iarp_utils.browser.browsers')
 
 
-class BrowserBase:
+class Browser:
     """ Base browser methods that apply to all browsers.
 
     Inherit BrowserBase within your own class and override the `def initialize(self):` method, add
@@ -146,7 +146,7 @@ class BrowserBase:
         self.browser.delete_all_cookies()
         for cookie in cookies:
             self.browser.add_cookie(cookie)
-        time.sleep(2)
+        self._wait(2)
         self.load_url(current_url)
 
     @property
@@ -155,10 +155,6 @@ class BrowserBase:
             return self.active_driver.download_directory
         except AttributeError:
             pass
-
-    @property
-    def temp_download_directory(self):
-        return self.download_directory
 
     def _start_driver(self):
 
@@ -428,16 +424,6 @@ class BrowserBase:
 
     def save_screenshot(self, filename=None, filename_prefix='', save_dir=None, sub_folder='', notes=None):
 
-        if not save_dir:
-            # I commonly use this in django management commands and crontab,
-            # attempt to load the cache storage folder from django settings.
-            for attr in ['CACHE_DIR', 'BASE_DIR']:
-                try:
-                    save_dir = os.path.join(getattr(settings, attr), 'browser_screenshots')
-                    break
-                except: # noqa
-                    pass
-
         save_dir = Path(os.path.join(save_dir or '', sub_folder))
         save_dir.mkdir(parents=True, exist_ok=True)
 
@@ -452,17 +438,6 @@ class BrowserBase:
             with open(f'{file}.txt', 'w') as fw:
                 fw.write(notes)
 
-        # if not save_file:
-        #
-        #     contents = ''
-        #     if os.path.isfile(file):
-        #         with open(file, 'rb') as fo:
-        #             contents = base64.b64encode(fo.read())
-        #
-        #         os.remove(file)
-        #
-        #     return contents
-
         return file
 
     @property
@@ -475,12 +450,16 @@ class BrowserBase:
         Args:
             seconds: how many seconds to wait?
         """
-        if seconds is None:
-            seconds = self.global_wait
         time.sleep(seconds or self.global_wait)
 
 
-class FirefoxBrowser(BrowserBase):
+class BrowserBase(Browser):
+    def __init__(self, *args, **kwargs):
+        warnings.warn('BrowserBase is deprecated, use Browser instead.', DeprecationWarning, stacklevel=2)
+        super().__init__(*args, **kwargs)
+
+
+class FirefoxBrowser(Browser):
     """
         BrowserBase preconfigured to run as Firefox browser.
     """
@@ -489,7 +468,7 @@ class FirefoxBrowser(BrowserBase):
         super().__init__(*args, **kwargs)
 
 
-class ChromeBrowser(BrowserBase):
+class ChromeBrowser(Browser):
     """
         BrowserBase preconfigured to run as Chrome browser.
     """

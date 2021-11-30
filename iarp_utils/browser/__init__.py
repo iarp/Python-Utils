@@ -1,2 +1,3 @@
-from .browsers import BrowserBase, ChromeBrowser, FirefoxBrowser  # noqa
-from .drivers import ChromeDriver, DriverBase, FirefoxDriver  # noqa
+# flake8: noqa
+from .browsers import Browser, BrowserBase, ChromeBrowser, FirefoxBrowser
+from .drivers import ChromeDriver, DriverBase, FirefoxDriver
