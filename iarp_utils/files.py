@@ -544,6 +544,7 @@ MIME_TYPES_LIST = [
     "application/vnd.mozilla.xul+xml",
     "application/vnd.ms-artgalry",
     "application/vnd.ms-cab-compressed",
+    "application/msexcel",
     "application/vnd.ms-excel",
     "application/vnd.ms-excel.addin.macroenabled.12",
     "application/vnd.ms-excel.sheet.binary.macroenabled.12",
