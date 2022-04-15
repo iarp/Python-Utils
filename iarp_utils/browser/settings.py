@@ -52,7 +52,7 @@ class Settings(object):
 
     @property
     def HEADLESS(self):
-        return bool(self._setting('BROWSER_HEADLESS'))
+        return bool(self._setting('HEADLESS'))
 
 
 settings = Settings()
