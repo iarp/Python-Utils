@@ -146,10 +146,12 @@ def get_wan_ip_from_external_sites(sites: list = None, shuffler=random.shuffle, 
         if r.status_code != 200:
             continue
 
+        response_text = r.text.strip()
+
         # See if the raw response text is an IP, this will avoid potentially
         # hitting multiple sites and failing the json key matching below.
-        if valid_ip_func(r.text):
-            return r.text
+        if valid_ip_func(response_text):
+            return response_text
 
         try:
             data = r.json()
