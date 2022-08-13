@@ -44,7 +44,7 @@ def generate_file_hash(opened_file, func=hashlib.md5):
     return output
 
 
-def download_file(url: str, path_to_file):
+def download_file(url: str, path_to_file, requests_kwargs=None):
     """ Download a file from a remote HTTP server.
 
     Examples:
@@ -54,8 +54,11 @@ def download_file(url: str, path_to_file):
     Args:
         url: URL to the file
         path_to_file: filename to save to locally
+        requests_kwargs:
     """
-    with requests.get(url, stream=True) as response, open(path_to_file, 'wb') as out_file:
+    if requests_kwargs is None:
+        requests_kwargs = {}
+    with requests.get(url, stream=True, **requests_kwargs) as response, open(path_to_file, 'wb') as out_file:
         shutil.copyfileobj(response.raw, out_file)
 
 
