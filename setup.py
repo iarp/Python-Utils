@@ -8,7 +8,7 @@ setup(
     author='IARP',
     author_email='iarp.opensource@gmail.com',
     license='MIT',
-    packages=['iarp_utils'],
+    packages=['iarp_utils', 'iarp_utils.browser'],
     install_requires=[],
     extras_require={
         'browser': ['selenium', 'requests'],
