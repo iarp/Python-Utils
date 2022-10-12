@@ -108,11 +108,11 @@ class DriverBase:
     def browser(self) -> RemoteWebDriver:
         return self._browser
 
-    def get_driver_options(self):
-        return self.options_class()
+    def get_driver_options(self, *args, **kwargs):
+        return self.options_class(*args, **kwargs)
 
-    def get_driver_service(self):
-        service = self.service_class()
+    def get_driver_service(self, *args, **kwargs):
+        service = self.service_class(*args, **kwargs)
 
         if not settings.WEBDRIVER_IN_PATH:
 
