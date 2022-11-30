@@ -257,6 +257,26 @@ class Browser:
         log.debug(f'browser get_element By.{find_by}, Value:{find_value}')
         return self.browser.find_element(by=find_by, value=find_value)
 
+    def get_elements(self, *args, **kwargs):
+        """ Obtains elements that match the element type given
+
+        Args:
+
+            element_name: the name="" value of the element
+            element_id: the id="" value of the element
+            element_class: the class="" value of the element
+            element_xpath: Google xpath searching
+
+        Returns:
+            List of WebElement objects
+
+        Raises:
+            NoSuchElementException
+        """
+        find_by, find_value = self.get_types(*args, **kwargs)
+        log.debug(f'browser get_elements By.{find_by}, Value:{find_value}')
+        return self.browser.find_elements(by=find_by, value=find_value)
+
     def fill_input_element(self, value, *args, **kwargs):
         warnings.warn("fill_input_element is deprecated. Use fill_element instead.", DeprecationWarning)
         return self.fill_element(value, *args, **kwargs)
