@@ -191,7 +191,7 @@ class Browser:
     def load_url(self, url):
         self.browser.get(url)
 
-    def get_types(self, element_name=None, element_id=None, element_class=None, element_xpath=None):
+    def get_types(self, **kwargs):
         """ Matches the correct By. values for the given element_* param
 
         Argument values must match 100% (no contains searching)
@@ -212,14 +212,27 @@ class Browser:
         if self.global_wait:
             self._wait()
 
-        if element_id:
-            return By.ID, element_id
-        if element_name:
-            return By.NAME, element_name
-        if element_class:
-            return By.CLASS_NAME, element_class
-        if element_xpath:
-            return By.XPATH, element_xpath
+        types = {
+            'id': By.ID,
+            'name': By.NAME,
+            'class': By.CLASS_NAME,
+            'xpath': By.XPATH,
+        }
+
+        for element_type, v in kwargs.items():
+            if '_' in element_type:
+                _, element_type = element_type.split('_', 1)
+            if by_type := types.get(element_type):
+                return by_type, v
+
+        if eid := kwargs.get('element_id'):
+            return By.ID, eid
+        if ename := kwargs.get('element_name'):
+            return By.NAME, ename
+        if ec := kwargs.get('element_class'):
+            return By.CLASS_NAME, ec
+        if ex := kwargs.get('element_xpath'):
+            return By.XPATH, ex
 
         raise ValueError('element id, name, class, or xpath must be supplied')
 
