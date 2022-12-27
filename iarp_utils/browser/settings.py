@@ -54,5 +54,9 @@ class Settings(object):
     def HEADLESS(self):
         return bool(self._setting('HEADLESS'))
 
+    @property
+    def BROWSER_BINARY(self):
+        return self._setting('BINARY', None)
+
 
 settings = Settings()

@@ -109,7 +109,12 @@ class DriverBase:
         return self._browser
 
     def get_driver_options(self, *args, **kwargs):
-        return self.options_class(*args, **kwargs)
+        options = self.options_class(*args, **kwargs)
+
+        if settings.BROWSER_BINARY:
+            options.binary_location = settings.BROWSER_BINARY
+
+        return options
 
     def get_driver_service(self, *args, **kwargs):
         service = self.service_class(*args, **kwargs)
