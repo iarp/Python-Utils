@@ -1,3 +1,5 @@
+import os
+
 
 class FirefoxPrintToPDFMixin:
 
@@ -23,3 +25,10 @@ class FirefoxDisableGeoLocationAbilitiesMixin:
         opts.set_preference("geo.prompt.testing.allow", False)
 
         return opts
+
+
+class FirefoxDisableGeckodriverLogMixin:
+
+    def get_driver_service(self, *args, **kwargs):
+        kwargs.setdefault('log_path', os.devnull)
+        return super().get_driver_service(*args, **kwargs)
