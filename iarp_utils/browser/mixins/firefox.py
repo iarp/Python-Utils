@@ -1,7 +1,7 @@
 import os
 
 
-class FirefoxPrintToPDFMixin:
+class PrintToPDFMixin:
 
     def get_driver_options(self):
         opts = super().get_driver_options()
@@ -14,7 +14,7 @@ class FirefoxPrintToPDFMixin:
         return opts
 
 
-class FirefoxDisableGeoLocationAbilitiesMixin:
+class DisableGeoLocationAbilitiesMixin:
 
     def get_driver_options(self):
         opts = super().get_driver_options()
@@ -27,7 +27,7 @@ class FirefoxDisableGeoLocationAbilitiesMixin:
         return opts
 
 
-class FirefoxDisableGeckodriverLogMixin:
+class DisableGeckodriverLogMixin:
 
     def get_driver_service(self, *args, **kwargs):
         kwargs.setdefault('log_path', os.devnull)
