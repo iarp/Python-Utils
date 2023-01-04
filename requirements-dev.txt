@@ -2,7 +2,10 @@
 selenium
 requests
 responses
-tox
+# pycharm issue with v4 +
+tox==3.27.1
 mock
 pillow
 psutil
+flake8
+isort
