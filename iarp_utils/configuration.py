@@ -8,8 +8,6 @@ import os
 import sys
 import warnings
 
-from .datetimes import fromisoformat
-
 
 class _EncodeManager:
     _type = 'encoded'
@@ -100,10 +98,10 @@ class _CustomJSONDecoder(json.JSONDecoder):
         obj_type = obj.get('_type')
 
         if obj_type == 'datetime':
-            return fromisoformat(obj['value'])
+            return datetime.datetime.fromisoformat(obj['value'])
 
         if obj_type == 'date':
-            return fromisoformat(obj['value']).date()
+            return datetime.datetime.fromisoformat(obj['value']).date()
 
         if obj_type in ['password', _EncodeManager._type]:
             try:

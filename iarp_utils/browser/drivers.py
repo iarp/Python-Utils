@@ -8,7 +8,6 @@ import tempfile
 import warnings
 import zipfile
 
-from ..datetimes import fromisoformat
 from ..exceptions import ImproperlyConfigured
 from ..files import (
     download_file,
@@ -176,7 +175,7 @@ class DriverBase:
             # into datetime object for time comparison. In the event it fails
             # to convert, clear the data list and let it resave the file.
             try:
-                last_checked = fromisoformat(data[driver_name][0])
+                last_checked = datetime.datetime.fromisoformat(data[driver_name][0])
                 hours_ago = datetime.datetime.now() - datetime.timedelta(hours=self._check_driver_version_interval)
                 allowed = hours_ago >= last_checked
 
