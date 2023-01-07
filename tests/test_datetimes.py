@@ -1,6 +1,7 @@
+import datetime
 import unittest
 
-from iarp_utils.datetimes import weekday
+from iarp_utils.datetimes import weekday, iterate_steps_between_datetimes
 
 
 class DatetimesWeekdayTests(unittest.TestCase):
@@ -22,3 +23,42 @@ class DatetimesWeekdayTests(unittest.TestCase):
         self.assertEqual(4, weekday('thu'))
         self.assertEqual(5, weekday('fri'))
         self.assertEqual(6, weekday('sat'))
+
+class DatetimeLoopIteratorTests(unittest.TestCase):
+    def test_iterator_five_minutes(self):
+
+        start = datetime.datetime(2022, 1, 4, 23, 0, 0)
+        end = datetime.datetime(2022, 1, 5, 1, 30, 0)
+        delta = datetime.timedelta(minutes=5)
+
+        expected = []
+
+        expected_start = start
+
+        while expected_start <= end:
+            expected.append(expected_start)
+            expected_start += delta
+
+        for dt in iterate_steps_between_datetimes(start, end, delta):
+           expected.remove(dt)
+
+        self.assertEqual([], expected)
+
+    def test_iterator_ten_minutes(self):
+
+        start = datetime.datetime(2022, 1, 4, 23, 0, 0)
+        end = datetime.datetime(2022, 1, 5, 1, 30, 0)
+        delta = datetime.timedelta(minutes=10)
+
+        expected = []
+
+        expected_start = start
+
+        while expected_start <= end:
+            expected.append(expected_start)
+            expected_start += delta
+
+        for dt in iterate_steps_between_datetimes(start, end, delta):
+           expected.remove(dt)
+
+        self.assertEqual([], expected)
