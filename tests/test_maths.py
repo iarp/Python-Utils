@@ -5,6 +5,12 @@ from iarp_utils import maths
 
 class MathsTests(unittest.TestCase):
 
+    def test_round_to_nearest_two(self):
+        self.assertEqual(0, maths.round_to_nearest(1, 2))
+        self.assertEqual(2, maths.round_to_nearest(2, 2))
+        self.assertEqual(4, maths.round_to_nearest(3, 2))
+        self.assertEqual(4, maths.round_to_nearest(4, 2))
+
     def test_round_to_nearest_five_down(self):
         self.assertEqual(0, maths.round_to_nearest(0, 5))
         self.assertEqual(0, maths.round_to_nearest(1, 5))
