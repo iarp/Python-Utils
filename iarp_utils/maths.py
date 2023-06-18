@@ -15,4 +15,3 @@ def round_to_nearest(x, base=5):
         integer
     """
     return base * round(x / base)
-
