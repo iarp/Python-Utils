@@ -1,3 +1,5 @@
+import datetime
+
 
 DAYNAMES = 'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'
 WEEKDAYS = dict(zip(DAYNAMES, range(7)))
@@ -51,3 +53,28 @@ def iterate_steps_between_datetimes(start, end, steps):
         yield start
 
         start += steps
+
+
+def get_current_week_of(weekday_number):
+    """ Returns the last date of the weekday_number supplied.
+
+    i.e. I always need Thursdays but if today isn't Thursday,
+        give me the one that just passed.
+
+    >>> import calendar
+    >>> get_current_week_of(calendar.THURSDAY)
+    # assuming today is 2023-06-18 the above call will return 2023-06-15
+
+    Args:
+        weekday_number: The weekday index (Monday = 0)
+            that we're basing our week on.
+
+    Returns:
+        date object
+
+    """
+    today = datetime.datetime.today()
+
+    offset = (today.weekday() - weekday_number) % 7
+
+    return today - datetime.timedelta(days=offset)

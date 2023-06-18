@@ -1,7 +1,10 @@
+import calendar
 import datetime
 import unittest
 
-from iarp_utils.datetimes import weekday, iterate_steps_between_datetimes
+from unittest import mock
+
+from iarp_utils.datetimes import weekday, iterate_steps_between_datetimes, get_current_week_of
 
 
 class DatetimesWeekdayTests(unittest.TestCase):
@@ -62,3 +65,17 @@ class DatetimeLoopIteratorTests(unittest.TestCase):
            expected.remove(dt)
 
         self.assertEqual([], expected)
+
+class CurrentWeekOfTests(unittest.TestCase):
+
+    def test_current_week_of_general_value(self):
+        with mock.patch('datetime.datetime') as mock_date:
+            mock_date.today.return_value = datetime.date(2001, 1, 18)
+
+            self.assertEqual(datetime.date(2001, 1, 15), get_current_week_of(calendar.MONDAY))
+            self.assertEqual(datetime.date(2001, 1, 16), get_current_week_of(calendar.TUESDAY))
+            self.assertEqual(datetime.date(2001, 1, 17), get_current_week_of(calendar.WEDNESDAY))
+            self.assertEqual(datetime.date(2001, 1, 18), get_current_week_of(calendar.THURSDAY))
+            self.assertEqual(datetime.date(2001, 1, 12), get_current_week_of(calendar.FRIDAY))
+            self.assertEqual(datetime.date(2001, 1, 13), get_current_week_of(calendar.SATURDAY))
+            self.assertEqual(datetime.date(2001, 1, 14), get_current_week_of(calendar.SUNDAY))
