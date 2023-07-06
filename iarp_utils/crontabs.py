@@ -150,6 +150,6 @@ def parse(crontab):
     hours = CrontabParser(24).parse(hours_raw)
     days_of_month = CrontabParser(31, 1).parse(day_of_month_raw)
     months_of_year = CrontabParser(12, 1).parse(months_of_year_raw)
-    day_of_week = CrontabParser(7).parse(day_of_week_raw)
+    day_of_week = CrontabParser(8).parse(day_of_week_raw)
 
     return minutes, hours, days_of_month, months_of_year, day_of_week

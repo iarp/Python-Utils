@@ -1,6 +1,6 @@
 import unittest
 
-from iarp_utils.crontabs import CrontabParser, ParseException
+from iarp_utils.crontabs import CrontabParser, ParseException, parse
 
 
 class CrontabParserTests(unittest.TestCase):
@@ -91,3 +91,7 @@ class CrontabParserTests(unittest.TestCase):
             CrontabParser(1).parse('1')
         with self.assertRaises(ValueError):
             CrontabParser(60).parse('61-0')
+
+    def test_day_of_week_includes_zero_through_seven(self):
+        *_, day_of_week = parse('* * * * *')
+        self.assertEqual(day_of_week, {0, 1, 2, 3, 4, 5, 6, 7})
