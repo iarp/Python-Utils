@@ -1,6 +1,11 @@
 from PIL import Image
 
 
+# PIL 10.0.0 removed Image.ANTIALIAS in favor of Image.LANCZOS
+# https://pillow.readthedocs.io/en/stable/releasenotes/10.0.0.html#constants
+ANTIALIAS = getattr(Image, 'ANTIALIAS', None) or getattr(Image, 'LANCZOS')
+
+
 def create_thumbnail(infile, outfile, width, height):
     """
     Args:
@@ -27,7 +32,7 @@ def create_thumbnail(infile, outfile, width, height):
         lower = width + upper
 
     img = img.crop((left, upper, right, lower))
-    img.thumbnail(thumb, Image.ANTIALIAS)
+    img.thumbnail(thumb, ANTIALIAS)
     img.save(outfile)
 
 
@@ -35,5 +40,5 @@ def create_width_proportional_thumbnail(infile, outfile, width):
     img = Image.open(infile)
     wpercent = (width / float(img.size[0]))
     hsize = int((float(img.size[1]) * float(wpercent)))
-    img = img.resize((width, hsize), Image.ANTIALIAS)
+    img = img.resize((width, hsize), ANTIALIAS)
     img.save(outfile)
