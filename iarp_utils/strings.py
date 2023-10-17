@@ -90,6 +90,22 @@ def find_between(value: str, first: str, second: str):
     return value[data_start:]
 
 
+def in_many(value: str, finders: list) -> bool:
+    """ Checks if value contains any of the finders
+
+    Args:
+        value: The string to search in
+        finders: A list of strings to search for within value
+
+    Returns:
+        boolean if value contains any of the finders
+    """
+    for f in finders:
+        if f in value:
+            return True
+    return False
+
+
 def slugify(value, replace_with='-', allow_unicode=False, lowercase=True):
     """ Convert to ASCII if 'allow_unicode' is False. Convert spaces to hyphens.
     Remove characters that aren't alphanumerics, underscores, or hyphens.

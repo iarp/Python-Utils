@@ -1,6 +1,6 @@
 import unittest
 
-from iarp_utils.strings import slugify, find_between, replace_all, random_character_generator
+from iarp_utils.strings import slugify, find_between, in_many, replace_all, random_character_generator
 
 
 class StringsTests(unittest.TestCase):
@@ -51,3 +51,27 @@ class StringsTests(unittest.TestCase):
 
     def test_slugify_custom_replace_with(self):
         self.assertEqual('input/with/spaces', slugify('input with spaces', replace_with='/'))
+
+    def test_in_many_at_least_one_match(self):
+        find_within_this = "Show string finale"
+        find_one_of_these = [
+            " finale",
+            " string",
+        ]
+        self.assertTrue(in_many(find_within_this, find_one_of_these))
+
+    def test_in_many_ensure_space_included(self):
+        find_within_this = "Show finale"
+        find_one_of_these = [
+            " finale",
+            " string",
+        ]
+        self.assertTrue(in_many(find_within_this, find_one_of_these))
+
+    def test_in_many_no_matches(self):
+        find_within_this = "showfinale"
+        find_one_of_these = [
+            " finale",
+            " string",
+        ]
+        self.assertFalse(in_many(find_within_this, find_one_of_these))
