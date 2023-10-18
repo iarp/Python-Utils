@@ -297,6 +297,8 @@ class ChromeDriver(DriverBase):
     def get_driver_options(self):
         options = super().get_driver_options()
         options.headless = self.headless
+        if self.headless:
+            options.add_argument("--headless=new")
 
         if self.download_directory:
             options.add_experimental_option('prefs', {
@@ -407,6 +409,8 @@ class FirefoxDriver(DriverBase):
     def get_driver_options(self):
         options = super().get_driver_options()
         options.headless = self.headless
+        if self.headless:
+            options.add_argument("--headless")
 
         if self.download_directory:
             options.set_preference('browser.download.folderList', 2)
