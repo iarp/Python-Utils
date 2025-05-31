@@ -1,3 +1,5 @@
+import datetime
+import random
 import re
 
 from .datetimes import weekday
@@ -153,3 +155,260 @@ def parse(crontab):
     day_of_week = CrontabParser(8).parse(day_of_week_raw)
 
     return minutes, hours, days_of_month, months_of_year, day_of_week
+
+
+def isoweekday_sunday_zero(isoweekday):
+    # Take datetime isoweekday value and convert it to crontab 0-6
+    return 0 if isoweekday == 7 else isoweekday
+
+
+def is_active_now(crontab, now):
+    minutes, hours, days_of_month, months_of_year, day_of_week = parse(crontab)
+
+    # print(f"{minutes=}")
+    # print(f"{hours=}")
+    # print(f"{days_of_month=}")
+    # print(f"{months_of_year=}")
+    # print(f"{day_of_week=}")
+
+    # minute calculation only works if this task runs and
+    # completes within the minute it's expected to run.
+    #   If it falls outside the expected minute, then the
+    #   channel will not get scanned.
+    if now.minute not in minutes:
+        return
+    if now.hour not in hours:
+        return
+    if now.day not in days_of_month:
+        return
+
+    # weekday and isoweekday returns variations of 1-7, crontab needs 0-6
+    if isoweekday_sunday_zero(now.isoweekday()) not in day_of_week:
+        return
+    if now.month not in months_of_year:
+        return
+
+    return True
+
+
+def calculate_schedule(crontab, check_month=False, period=10, now=None):
+    if not now:
+        now = datetime.datetime.now()
+    now = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    if check_month:
+        now = now.replace(day=1)
+    matched_timestamps = []
+    start_day = now.day
+    start_month = now.month
+    while True:
+        if is_active_now(crontab, now):
+            matched_timestamps.append(now)
+
+        now = now + datetime.timedelta(minutes=period)
+        if not check_month and now.day != start_day:
+            break
+        elif check_month and now.month != start_month:
+            break
+
+    return matched_timestamps
+
+
+def validate_crontab_values(minute=None, hour=None, day_of_week=None, day_of_month=None):
+    if isinstance(minute, int):
+        if not 0 <= minute <= 59:
+            raise ValueError(f"crontab minute must be between 0-59, was given {minute=}")
+        if minute % 10 != 0:
+            raise ValueError(f"crontab minute value must be divisible by 10, was given {minute=}")
+    if isinstance(hour, int) and not 0 <= hour <= 23:
+        raise ValueError(f"crontab hour must be between 0-23, was given {hour=}")
+    if isinstance(day_of_week, int) and not 0 <= day_of_week <= 6:
+        raise ValueError(f"crontab day_of_week must be between 0-6, was given {day_of_week=}")
+    if isinstance(day_of_month, int) and not 1 <= day_of_month <= 31:
+        raise ValueError(f"crontab day_of_month must be between 1-31, was given {day_of_month=}")
+    return True
+
+
+def generate_weekly(minute=None, hour=None, day_of_week=None):
+    """
+    day_of_week can be 0-7 with 0 and 7 meaning sunday.
+    """
+
+    minutes = list(range(0, 60, 10))
+    hours = list(range(8, 20))
+    month = "*"
+
+    if isinstance(hour, list):
+        hour = random.choice(hour)
+
+    minute = minute or random.choice(minutes)
+    hour = hour or random.choice(hours)
+    day_of_month = "*"
+
+    if not day_of_week:
+        day_of_week = random.choice(list(range(0, 7)))
+    elif isinstance(day_of_week, list):
+        day_of_week = random.choice(day_of_week)
+
+    validate_crontab_values(minute=minute, hour=hour, day_of_week=day_of_week)
+
+    return f"{minute} {hour} {day_of_month} {month} {day_of_week}"
+
+
+def generate_monthly(minute=None, hour=None, day=None):
+
+    if isinstance(hour, list):
+        hour = random.choice(hour)
+
+    minutes = list(range(0, 60, 10))
+    hours = list(range(8, 20))
+    days = list(range(1, 29))  # 29 ensures it'll run even in February
+    month = "*"
+
+    minute = minute or random.choice(minutes)
+    hour = hour or random.choice(hours)
+    day_of_month = day or random.choice(days)
+    day_of_week = "*"
+
+    validate_crontab_values(minute=minute, hour=hour, day_of_month=day)
+
+    return f"{minute} {hour} {day_of_month} {month} {day_of_week}"
+
+
+def generate_biyearly(minute=None, hour=None, day=None):
+
+    minutes = list(range(0, 60, 10))
+    hours = list(range(8, 20))
+    days = list(range(1, 29))  # 29 ensures it'll run even in February
+    month = list(range(1, 13))
+
+    if isinstance(hour, list):
+        hour = random.choice(hour)
+
+    minute = minute or random.choice(minutes)
+    hour = hour or random.choice(hours)
+    day_of_month = day or random.choice(days)
+    month1 = random.choice(month)
+    month2 = (month1 + 6) % 12 or 1
+    day_of_week = "*"
+
+    validate_crontab_values(minute=minute, hour=hour, day_of_month=day)
+
+    return f"{minute} {hour} {day_of_month} {month1},{month2} {day_of_week}"
+
+
+def generate_yearly(minute=None, hour=None, day=None):
+
+    minutes = list(range(0, 60, 10))
+    hours = list(range(8, 20))
+    days = list(range(1, 29))  # 29 ensures it'll run even in February
+    month = list(range(1, 13))
+
+    if isinstance(hour, list):
+        hour = random.choice(hour)
+
+    minute = minute or random.choice(minutes)
+    hour = hour or random.choice(hours)
+    day_of_month = day or random.choice(days)
+    month = random.choice(month)
+    day_of_week = "*"
+
+    validate_crontab_values(minute=minute, hour=hour)
+
+    return f"{minute} {hour} {day_of_month} {month} {day_of_week}"
+
+
+def generate_every_other_day(minute=None, hour=None):
+
+    minutes = list(range(0, 60, 10))
+    hours = list(range(8, 20))
+
+    if isinstance(hour, list):
+        hour = random.choice(hour)
+
+    minute = minute or random.choice(minutes)
+    hour = hour or random.choice(hours)
+    day_of_month = "*"
+    month = "*"
+    day_of_week = random.choice(["0-7/2", "1-7/2"])
+
+    validate_crontab_values(minute=minute, hour=hour)
+
+    return f"{minute} {hour} {day_of_month} {month} {day_of_week}"
+
+
+def generate_daily(minute=None, hour=None):
+
+    minutes = list(range(0, 60, 10))
+    hours = list(range(8, 20))
+
+    if isinstance(hour, list):
+        hour = random.choice(hour)
+
+    minute = minute or random.choice(minutes)
+    hour = hour or random.choice(hours)
+    day_of_month = "*"
+    month = "*"
+    day_of_week = "*"
+
+    validate_crontab_values(minute=minute, hour=hour)
+
+    return f"{minute} {hour} {day_of_month} {month} {day_of_week}"
+
+
+def generate_selection_monthly_crontabs(length=22, minute=0, hour=5, increment_minute=10, increment_hour=1):
+    vals = []
+
+    for x in range(length):
+
+        day_of_month = random.choice(range(1, 30))
+
+        vals.append(f"{minute} {hour} {day_of_month} * *")
+
+        minute += increment_minute
+        if minute >= 60:
+            minute = 0
+            hour += increment_hour
+
+    return vals
+
+
+def generate_selection_biweekly_crontabs(length=22, minute=0, hour=13, increment_minute=10, increment_hour=1):
+    vals = []
+
+    week_of_month_options = [
+        list(range(1, 14 + 1)),
+        list(range(14, 30 + 1)),
+    ]
+
+    for x in range(length):
+
+        day_of_week_selection_list = []
+        for opt in week_of_month_options:
+            check_day = random.choice(opt)
+            day_of_week_selection_list.append(str(check_day))
+
+        day_of_month = ",".join(day_of_week_selection_list)
+
+        vals.append(f"{minute} {hour} {day_of_month} * *")
+
+        minute += increment_minute
+        if minute >= 60:
+            minute = 0
+            hour += increment_hour
+
+    return vals
+
+
+def generate_selection_daily_crontabs(length=22, minute=0, hour=16, increment_minute=10, increment_hour=1):
+    vals = []
+
+    for x in range(length):
+
+        vals.append(f"{minute} {hour} * * *")
+
+        minute += increment_minute
+        if minute >= 60:
+            minute = 0
+            hour += increment_hour
+
+    return vals
