@@ -55,7 +55,7 @@ def iterate_steps_between_datetimes(start, end, steps):
         start += steps
 
 
-def get_current_week_of(weekday_number, date=datetime.datetime.today):
+def get_current_week_of(weekday_number, date=None):
     """ Returns the last date of the weekday_number supplied.
 
     i.e. I always need Thursdays but if today isn't Thursday,
@@ -74,7 +74,9 @@ def get_current_week_of(weekday_number, date=datetime.datetime.today):
         date object
 
     """
-    today = date()
+    today = date
+    if not date:
+        today = datetime.datetime.today()
 
     offset = (today.weekday() - weekday_number) % 7
 

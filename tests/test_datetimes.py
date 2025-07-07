@@ -27,6 +27,7 @@ class DatetimesWeekdayTests(unittest.TestCase):
         self.assertEqual(5, weekday('fri'))
         self.assertEqual(6, weekday('sat'))
 
+
 class DatetimeLoopIteratorTests(unittest.TestCase):
     def test_iterator_five_minutes(self):
 
@@ -66,6 +67,7 @@ class DatetimeLoopIteratorTests(unittest.TestCase):
 
         self.assertEqual([], expected)
 
+
 class CurrentWeekOfTests(unittest.TestCase):
 
     def test_current_week_of_general_value(self):
@@ -79,3 +81,14 @@ class CurrentWeekOfTests(unittest.TestCase):
             self.assertEqual(datetime.date(2001, 1, 12), get_current_week_of(calendar.FRIDAY))
             self.assertEqual(datetime.date(2001, 1, 13), get_current_week_of(calendar.SATURDAY))
             self.assertEqual(datetime.date(2001, 1, 14), get_current_week_of(calendar.SUNDAY))
+
+    def test_current_week_of_general_value_as_passed_param(self):
+        date = datetime.date(2001, 1, 18)
+
+        self.assertEqual(datetime.date(2001, 1, 15), get_current_week_of(calendar.MONDAY, date=date))
+        self.assertEqual(datetime.date(2001, 1, 16), get_current_week_of(calendar.TUESDAY, date=date))
+        self.assertEqual(datetime.date(2001, 1, 17), get_current_week_of(calendar.WEDNESDAY, date=date))
+        self.assertEqual(datetime.date(2001, 1, 18), get_current_week_of(calendar.THURSDAY, date=date))
+        self.assertEqual(datetime.date(2001, 1, 12), get_current_week_of(calendar.FRIDAY, date=date))
+        self.assertEqual(datetime.date(2001, 1, 13), get_current_week_of(calendar.SATURDAY, date=date))
+        self.assertEqual(datetime.date(2001, 1, 14), get_current_week_of(calendar.SUNDAY, date=date))
